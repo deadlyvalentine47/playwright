@@ -1,0 +1,11 @@
+[
+    {
+        "testName": "E2E Create Account Positive Flow",
+        "firstName": "firstName",
+        "lastName": "lastName",
+        "userName": "userNameAB1183",
+        "email":"userNameAB1183@gmail.com",
+        "password":"TestPassword@123",
+        "country": "Canada"
+    }
+]

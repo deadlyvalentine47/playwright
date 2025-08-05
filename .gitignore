@@ -1,0 +1,7 @@
+.cursorindexingignore
+.specstory/
+Chat history.md
+node_modules/
+package-lock.json
+reports/
+screenshots/
