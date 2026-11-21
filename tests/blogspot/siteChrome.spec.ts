@@ -7,7 +7,9 @@ const PAGES = [BASE_URL, `${BASE_URL}p/playwrightpractice.html`];
 
 test.describe('Site chrome', () => {
   for (const url of PAGES) {
-    test(`header renders on ${url.replace(BASE_URL, '/')}`, async ({ page }) => {
+    const label = url.replace(BASE_URL, '/');
+
+    test(`header renders on ${label}`, async ({ page }) => {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
 
       const header = new HeaderComponent(page);
@@ -16,7 +18,7 @@ test.describe('Site chrome', () => {
       await expect(header.description).toContainText('For Selenium, Cypress & Playwright');
     });
 
-    test(`navigation exposes the practice links on ${url.replace(BASE_URL, '/')}`, async ({ page }) => {
+    test(`navigation exposes the practice links on ${label}`, async ({ page }) => {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
 
       const nav = new NavigationComponent(page);
@@ -26,7 +28,10 @@ test.describe('Site chrome', () => {
       expect(labels).toContain('PlaywrightPractice');
       expect(labels.length).toBeGreaterThanOrEqual(5);
 
-      await expect(nav.linkByLabel('PlaywrightPractice')).toHaveAttribute('href', /playwrightpractice/);
+      await expect(nav.linkByLabel('PlaywrightPractice')).toHaveAttribute(
+        'href',
+        /playwrightpractice/,
+      );
     });
   }
 });

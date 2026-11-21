@@ -1,7 +1,13 @@
+import type { Locator, Page } from '@playwright/test';
 import { BasePage } from './base.page.js';
 
 export class ProductTablePage extends BasePage {
-  constructor(page) {
+  readonly table: Locator;
+  readonly headers: Locator;
+  readonly rows: Locator;
+  readonly pagination: Locator;
+
+  constructor(page: Page) {
     super(page);
     this.table = page.locator('#productTable');
     this.headers = this.table.locator('thead th');
@@ -9,32 +15,32 @@ export class ProductTablePage extends BasePage {
     this.pagination = page.locator('#pagination li a');
   }
 
-  rowByName(name) {
+  rowByName(name: string): Locator {
     return this.rows.filter({ hasText: name });
   }
 
-  pageLink(n) {
+  pageLink(n: number): Locator {
     return this.pagination.filter({ hasText: new RegExp(`^${n}$`) });
   }
 
-  async columnCount() {
+  async columnCount(): Promise<number> {
     return this.headers.count();
   }
 
-  async rowCount() {
+  async rowCount(): Promise<number> {
     return this.rows.count();
   }
 
-  async productsOnPage() {
+  async productsOnPage(): Promise<string[]> {
     const names = await this.rows.locator('td:nth-child(2)').allTextContents();
     return names.map((n) => n.trim());
   }
 
-  async selectRow(name) {
+  async selectRow(name: string): Promise<void> {
     await this.rowByName(name).locator('input').check();
   }
 
-  async goToPage(n) {
+  async goToPage(n: number): Promise<void> {
     await this.pageLink(n).click();
   }
 }

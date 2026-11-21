@@ -1,6 +1,6 @@
 # Playwright Automation Framework
 
-End-to-end automation framework built with Playwright and JavaScript. Page Object Model,
+End-to-end automation framework built with Playwright and TypeScript. Page Object Model,
 data-driven specs, environment config, and CI. Adaptable to any web application.
 
 ## Project structure
@@ -8,19 +8,20 @@ data-driven specs, environment config, and CI. Adaptable to any web application.
 ```text
 ├── tests/
 │   ├── blogspot/            # Live suite — testautomationpractice.blogspot.com
-│   │   ├── toggle.spec.js
-│   │   ├── table.spec.js
-│   │   ├── dialog.spec.js
-│   │   ├── datePicker.spec.js
-│   │   └── newtab.spec.js
+│   │   ├── toggle.spec.ts
+│   │   ├── table.spec.ts
+│   │   ├── dialog.spec.ts
+│   │   ├── datePicker.spec.ts
+│   │   ├── newtab.spec.ts
+│   │   └── siteChrome.spec.ts
 │   └── bolt/                # Skipped — see "Skipped suites" below
 ├── pages/
 │   ├── blogspot/            # One page object per widget
 │   └── bolt/
 ├── components/              # Cross-page objects (header, nav)
 ├── testdata/                # JSON fixtures, grouped by target
-├── utils/dataProvider.js    # Reads a JSON fixture with a clear error if missing
-├── playwright.config.js
+├── utils/dataProvider.ts    # Typed JSON fixture loader
+├── playwright.config.ts
 └── package.json
 ```
 
@@ -110,12 +111,18 @@ pagination, alert/confirm/prompt dialogs, jQuery UI date picker, and multi-windo
 `WEB_AUTOMATION_FEATURES.md` is the longer checklist of web features worth automating, with a
 suggested practice site for each — it's the backlog for this repo.
 
-## Linting
+## Type safety
 
 ```bash
-npm run lint
-npm run lint:fix
+npm run typecheck     # tsc --noEmit, strict + noUncheckedIndexedAccess
+npm run lint          # eslint incl. typescript-eslint
+npm run verify        # typecheck && lint && test — what CI should run
 ```
+
+Strict mode is on: `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`,
+`noUnusedLocals`. Credentials and fixture shapes are typed at the boundary
+(`BoltCredentials`, `DateOfBirth`) so a malformed JSON fixture fails at the assertion,
+not three pages later.
 
 ## Requirements
 

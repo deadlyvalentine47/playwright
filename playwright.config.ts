@@ -9,7 +9,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   reporter: [['list'], ['html', { outputFolder: 'reports', open: 'never' }]],
   use: {
-    baseURL: process.env.BOLT_URL || 'https://bolt.playrealbrokerage.com',
+    baseURL: process.env.BOLT_URL ?? 'https://bolt.playrealbrokerage.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -17,7 +17,7 @@ export default defineConfig({
   projects: [
     {
       name: 'bolt-auth',
-      testMatch: /setup\/.*\.setup\.js/,
+      testMatch: /setup\/.*\.setup\.ts/,
       use: { ...devices['Desktop Chrome'] },
       // every run writes the same .auth/bolt.json; concurrent runs tear the file
       fullyParallel: false,

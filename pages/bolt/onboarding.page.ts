@@ -1,5 +1,22 @@
+import type { Locator, Page } from '@playwright/test';
+
+export type DateOfBirth = {
+  year: number;
+  month: number;
+  day: number;
+};
+
 export class BoltOnboardingPage {
-  constructor(page) {
+  readonly page: Page;
+  readonly birthDate: Locator;
+  readonly datePicker: Locator;
+  readonly monthSelect: Locator;
+  readonly yearSelect: Locator;
+  readonly nextButton: Locator;
+  readonly previousButton: Locator;
+  readonly progress: Locator;
+
+  constructor(page: Page) {
     this.page = page;
     this.birthDate = page.locator('#birthDate');
     this.datePicker = page.locator('.react-datepicker');
@@ -10,17 +27,17 @@ export class BoltOnboardingPage {
     this.progress = page.getByText(/\d+\s*\/\s*8/);
   }
 
-  async goto() {
+  async goto(): Promise<void> {
     await this.page.goto('/onboarding/application-form', { waitUntil: 'networkidle' });
     await this.birthDate.waitFor({ state: 'visible' });
   }
 
-  async openDatePicker() {
+  async openDatePicker(): Promise<void> {
     await this.birthDate.click();
     await this.datePicker.waitFor({ state: 'visible' });
   }
 
-  async selectDateOfBirth({ year, month, day }) {
+  async selectDateOfBirth({ year, month, day }: DateOfBirth): Promise<void> {
     await this.openDatePicker();
     await this.yearSelect.selectOption(String(year));
     await this.monthSelect.selectOption(String(month));
@@ -32,15 +49,15 @@ export class BoltOnboardingPage {
     await this.datePicker.waitFor({ state: 'hidden' });
   }
 
-  async birthDateValue() {
+  async birthDateValue(): Promise<string> {
     return this.birthDate.inputValue();
   }
 
-  async monthOptionCount() {
+  async monthOptionCount(): Promise<number> {
     return this.monthSelect.locator('option').count();
   }
 
-  async yearOptionCount() {
+  async yearOptionCount(): Promise<number> {
     return this.yearSelect.locator('option').count();
   }
 }

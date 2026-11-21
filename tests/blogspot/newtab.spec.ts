@@ -28,8 +28,8 @@ test.describe('Popups and new tabs', () => {
     expect(seleniumPopup).toBeTruthy();
     expect(playwrightPopup).toBeTruthy();
 
-    await expect(seleniumPopup).toHaveTitle('Selenium');
-    await expect(playwrightPopup).toHaveTitle(/Playwright/);
+    await expect(seleniumPopup!).toHaveTitle('Selenium');
+    await expect(playwrightPopup!).toHaveTitle(/Playwright/);
   });
 
   test('New Tab button opens exactly one popup', async ({ page }) => {

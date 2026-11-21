@@ -1,7 +1,18 @@
-import { BasePage } from './base.page.js';
+import type { Locator, Page } from '@playwright/test';
+import { BasePage, type DialogCapture } from './base.page.js';
+
+type CaptureOptions = {
+  accept: boolean;
+  text?: string;
+};
 
 export class DialogPage extends BasePage {
-  constructor(page) {
+  readonly simpleAlert: Locator;
+  readonly confirmationAlert: Locator;
+  readonly promptAlert: Locator;
+  readonly result: Locator;
+
+  constructor(page: Page) {
     super(page);
     this.simpleAlert = page.getByRole('button', { name: 'Simple Alert' });
     this.confirmationAlert = page.getByRole('button', { name: 'Confirmation Alert' });
@@ -9,7 +20,7 @@ export class DialogPage extends BasePage {
     this.result = page.locator('#demo');
   }
 
-  captureDialog(options) {
+  private captureDialog(options: CaptureOptions): Promise<DialogCapture> {
     return this.page.waitForEvent('dialog').then(async (dialog) => {
       const message = dialog.message();
       const type = dialog.type();
@@ -22,19 +33,19 @@ export class DialogPage extends BasePage {
     });
   }
 
-  async triggerSimpleAlert() {
+  async triggerSimpleAlert(): Promise<DialogCapture> {
     const dialogPromise = this.captureDialog({ accept: true });
     await this.simpleAlert.click();
     return dialogPromise;
   }
 
-  async triggerConfirmation(accept) {
+  async triggerConfirmation(accept: boolean): Promise<DialogCapture> {
     const dialogPromise = this.captureDialog({ accept });
     await this.confirmationAlert.click();
     return dialogPromise;
   }
 
-  async triggerPrompt(text) {
+  async triggerPrompt(text: string): Promise<DialogCapture> {
     const dialogPromise = this.captureDialog({ accept: true, text });
     await this.promptAlert.click();
     return dialogPromise;
