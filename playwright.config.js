@@ -1,43 +1,26 @@
-const { defineConfig, devices } = require('@playwright/test');
-// import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test';
+import 'dotenv/config';
 
-require('dotenv').config({ path: process.env.ENV_FILE || '.env' });
-
-module.exports = defineConfig({
+export default defineConfig({
   testDir: './tests',
   timeout: 60 * 1000,
-  expect: {
-    timeout: 5000
-  },
+  expect: { timeout: 5000 },
   fullyParallel: true,
-  // retries: 3,
-  reporter: [
-    ['html', { outputFolder: 'reports', open: 'never' }],
-    // ['junit', { outputFile: 'test-results/junit.xml' }]
-  ],
+  forbidOnly: !!process.env.CI,
+  reporter: [['list'], ['html', { outputFolder: 'reports', open: 'never' }]],
   use: {
-    trace: 'retain-on-failure',
-    screenshot: 'on',
-    video: 'on',
-    // actionTimeout: 5000
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [
     {
       name: 'Chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // {
-    //   name: 'Firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-    // {
-    //   name: 'WebKit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
   ],
-  outputDir: 'screenshots', // For artifacts like screenshots
-
-  // CI/CD specific settings
-  workers: process.env.CI ? 1 : undefined,
+  outputDir: 'screenshots',
+  // blogspot.com rate-limits concurrent connections; 4 workers is the sweet spot
+  workers: process.env.CI ? 1 : 4,
   retries: process.env.CI ? 2 : 0,
 });

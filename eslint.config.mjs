@@ -7,6 +7,7 @@ import { defineConfig } from "eslint/config";
 
 
 export default defineConfig([
+  { ignores: ["reports/**", "screenshots/**", "node_modules/**", "package-lock.json"] },
   { files: ["**/*.{js,mjs,cjs}"], plugins: { js }, extends: ["js/recommended"] },
   { files: ["**/*.{js,mjs,cjs}"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
   { files: ["**/*.json"], plugins: { json }, language: "json/json", extends: ["json/recommended"] },
