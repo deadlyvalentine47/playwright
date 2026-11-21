@@ -2,12 +2,11 @@
 .specstory/
 Chat history.md
 node_modules/
-package-lock.json
 reports/
 screenshots/
 
-# Local and per-environment files. `.env.ci` is deliberately NOT ignored: it holds
-# only non-secret configuration and is committed so CI has something to load.
+# Local and per-environment files. Nothing here is read by CI: each GitHub
+# Environment (qa / stage / prod) supplies the values.
 .env
 .env.local
 .env.qa
@@ -16,3 +15,6 @@ screenshots/
 
 # Playwright auth state
 .auth/
+
+# NOTE: package-lock.json is committed on purpose. `npm ci` and the setup-node
+# cache both require it; ignoring it means CI cannot install dependencies at all.
