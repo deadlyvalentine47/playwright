@@ -1,15 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
-import 'dotenv/config';
+import { env } from './utils/env.js';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 60 * 1000,
-  expect: { timeout: 5000 },
+  timeout: 60_000,
+  expect: { timeout: 5_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   reporter: [['list'], ['html', { outputFolder: 'reports', open: 'never' }]],
   use: {
-    baseURL: process.env.BOLT_URL ?? 'https://bolt.playrealbrokerage.com',
+    baseURL: env.boltBaseUrl,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -19,16 +19,15 @@ export default defineConfig({
       name: 'bolt-auth',
       testMatch: /setup\/.*\.setup\.ts/,
       use: { ...devices['Desktop Chrome'] },
-      // every run writes the same .auth/bolt.json; concurrent runs tear the file
+      // every run writes the same auth state file; concurrent runs tear it
       fullyParallel: false,
       workers: 1,
     },
     {
       name: 'blogspot',
       testDir: './tests/blogspot',
-      use: { ...devices['Desktop Chrome'], baseURL: 'https://testautomationpractice.blogspot.com' },
-      // blogspot rate-limits concurrent connections; 4 is the sweet spot
-      workers: process.env.CI ? 1 : 4,
+      use: { ...devices['Desktop Chrome'], baseURL: env.blogspotBaseUrl },
+      workers: env.workers,
     },
     {
       name: 'bolt',
@@ -42,5 +41,5 @@ export default defineConfig({
     },
   ],
   outputDir: 'screenshots',
-  retries: process.env.CI ? 2 : 0,
+  retries: env.retries,
 });

@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { BASE_URL } from '../../pages/blogspot/base.page.js';
 import { HeaderComponent } from '../../components/header.component.js';
 import { NavigationComponent } from '../../components/navigation.component.js';
 import { fixtures } from '../../utils/fixtures.js';
@@ -8,10 +7,10 @@ const data = fixtures.siteChrome();
 
 test.describe('Site chrome', () => {
   for (const target of data.pages) {
-    const url = `${BASE_URL}${target.path}`;
+    const path = target.path ? `/${target.path}` : '/';
 
     test(`header renders on ${target.label}`, async ({ page }) => {
-      await page.goto(url, { waitUntil: 'domcontentloaded' });
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
 
       const header = new HeaderComponent(page);
 
@@ -20,7 +19,7 @@ test.describe('Site chrome', () => {
     });
 
     test(`navigation exposes the practice links on ${target.label}`, async ({ page }) => {
-      await page.goto(url, { waitUntil: 'domcontentloaded' });
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
 
       const nav = new NavigationComponent(page);
       const labels = await nav.linkLabels();

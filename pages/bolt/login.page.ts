@@ -21,7 +21,7 @@ export class BoltLoginPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(process.env.BOLT_URL ?? '', { waitUntil: 'networkidle' });
+    await this.page.goto('/', { waitUntil: 'networkidle' });
     await this.usernameInput.waitFor({ state: 'visible' });
   }
 

@@ -1,7 +1,5 @@
 import type { Page } from '@playwright/test';
 
-export const BASE_URL = 'https://testautomationpractice.blogspot.com/';
-
 export class BasePage {
   readonly page: Page;
 
@@ -9,8 +7,11 @@ export class BasePage {
     this.page = page;
   }
 
-  async goto(): Promise<void> {
-    await this.page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  /**
+   * Resolves against the project's baseURL, which comes from the active env file.
+   */
+  async goto(path = '/'): Promise<void> {
+    await this.page.goto(path, { waitUntil: 'domcontentloaded' });
   }
 }
 
