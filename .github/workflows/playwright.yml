@@ -2,28 +2,30 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
+    inputs:
+      target:
+        description: Which GitHub Environment to run against
+        type: choice
+        options: [qa, stage, prod]
+        default: qa
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Public suite: no credentials, no secrets. Runs on every PR.
+  # Public suite. Needs no credentials, so it runs on pull requests too.
+  #
+  # This job does not select an environment: it targets one public site whose
+  # URL is not a secret, so there is nothing to configure per environment.
   blogspot:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    env:
-      ENV_FILE: .env.ci
-      # Non-secret configuration lives here in plain text, versioned with the code.
-      # Secrets come from repository settings, never from the repo.
-      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
-      BOLT_BASE_URL: https://bolt.playrealbrokerage.com
-      WORKERS: 2
-      RETRIES: 2
     strategy:
       fail-fast: false
       matrix:
@@ -38,12 +40,9 @@ jobs:
           cache: npm
 
       # Some images set NODE_ENV=production, which makes npm skip every
-      # devDependency — and every dependency in this project is one.
+      # devDependency — and every dependency here is one.
       - name: Install dependencies
         run: npm ci --include=dev
-
-      - name: Validate environment
-        run: npx tsx scripts/check-env.ts
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -52,6 +51,12 @@ jobs:
         run: npx playwright test --project=blogspot --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           CI: true
+          APP_ENV: public
+          ENV_FILE: .env.missing
+          BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
+          BOLT_BASE_URL: https://testautomationpractice.blogspot.com/
+          WORKERS: 2
+          RETRIES: 2
 
       - name: Upload report
         if: always()
@@ -63,18 +68,30 @@ jobs:
             screenshots/
           retention-days: 14
 
-  # Authenticated suite: needs real credentials. Skipped on pull requests so
-  # contributors and forks don't fail on a missing secret.
+  # Authenticated suite. Targets whichever GitHub Environment the run names.
+  #
+  # `environment:` is the single source of truth. Every secret below resolves
+  # from THAT environment's settings — the repo contains no URLs and no
+  # credentials. Change a hostname in Settings > Environments, not in a commit.
   bolt:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
+    environment: ${{ inputs.target || 'qa' }}
     env:
-      ENV_FILE: .env.ci
-      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
-      BOLT_BASE_URL: https://bolt.playrealbrokerage.com
+      CI: true
+      APP_ENV: ${{ inputs.target || 'qa' }}
+      # Deliberately a file that does not exist: in CI nothing comes from a file,
+      # only from this environment's injected values.
+      ENV_FILE: .env.missing
+      BLOGSPOT_BASE_URL: ${{ secrets.BLOGSPOT_BASE_URL }}
+      BOLT_BASE_URL: ${{ secrets.BOLT_BASE_URL }}
+      BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
       WORKERS: 1
       RETRIES: 2
+      # Turn on when every hostname contains its environment name (api.qa...,
+      # api.stage...). Catches a stage build running QA config.
+      URL_MUST_CONTAIN_ENV: false
     steps:
       - uses: actions/checkout@v4
 
@@ -86,29 +103,23 @@ jobs:
       - name: Install dependencies
         run: npm ci --include=dev
 
-      # Credentials are injected from the secret store into an env var, then
-      # written to the fixture path the specs already read. Nothing is committed.
-      - name: Provide credentials
-        run: printf '%s' "$BOLT_LOGIN_JSON" > testdata/bolt/login.json
-        env:
-          BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
-
       - name: Validate environment
         run: npx tsx scripts/check-env.ts
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Write credentials
+        run: printf '%s' "$BOLT_LOGIN_JSON" > testdata/bolt/login.json
+
       - name: Run authenticated suite
         run: npx playwright test --project=bolt
-        env:
-          CI: true
 
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bolt-report
+          name: bolt-report-${{ inputs.target || 'qa' }}
           path: |
             reports/
             screenshots/

@@ -3,6 +3,7 @@ import { env } from './utils/env.js';
 
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './tests/global.setup.ts',
   timeout: 60_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
