@@ -1,35 +1,38 @@
-import { env, MissingEnvVarError } from '../utils/env.js';
+import { baseUrlFor, env } from '../utils/env.js';
 
 /**
- * Fails CI fast and loudly when an environment is not configured.
- * Run before the test step so a missing secret costs 5 seconds, not 20 minutes.
+ * Validates only the projects this run needs.
+ *
+ *   npx tsx scripts/check-env.ts blogspot
+ *   npx tsx scripts/check-env.ts bolt
+ *
+ * A job declares the variables for its own suite; nothing else is required.
  */
-const REQUIRED = ['BLOGSPOT_BASE_URL', 'BOLT_BASE_URL'];
+const requested = process.argv.slice(2).filter(Boolean);
+const projects = requested.length > 0 ? requested : ['blogspot', 'bolt'];
 
 console.log(`Target environment : ${env.name}`);
 console.log(`Env file loaded    : ${env.envFile}`);
+console.log(`Checking projects  : ${projects.join(', ')}`);
 
-const missing = REQUIRED.filter((name) => !process.env[name]?.trim());
+let failed = false;
 
-if (missing.length > 0) {
-  console.error(`\nMissing: ${missing.join(', ')}`);
-  console.error(
-    'In CI these come from the GitHub Environment selected by the workflow.\n' +
-      'Locally, copy .env.example and fill in every value for that environment.',
-  );
-  process.exit(1);
+for (const project of projects) {
+  const variable = project === 'blogspot' ? 'BLOGSPOT_BASE_URL' : 'BOLT_BASE_URL';
+  try {
+    console.log(`  ${variable.padEnd(18)}: ${baseUrlFor(project)}`);
+  } catch (error) {
+    failed = true;
+    console.error(`  ${variable.padEnd(18)}: MISSING — ${(error as Error).message.split('\n')[0]}`);
+  }
 }
 
-try {
-  console.log(`BLOGSPOT_BASE_URL  : ${env.blogspotBaseUrl}`);
-  console.log(`BOLT_BASE_URL      : ${env.boltBaseUrl}`);
-  console.log(`WORKERS / RETRIES  : ${env.workers} / ${env.retries}`);
-} catch (error) {
-  if (error instanceof MissingEnvVarError) {
-    console.error(`\n${error.message}`);
-    process.exit(1);
-  }
-  throw error;
+if (failed) {
+  console.error(
+    '\nSet the missing values on the GitHub Environment selected by the workflow, ' +
+      'or in your local env file.',
+  );
+  process.exit(1);
 }
 
 console.log('\nEnvironment OK');

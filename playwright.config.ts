@@ -1,16 +1,19 @@
 import { defineConfig, devices } from '@playwright/test';
 import { env } from './utils/env.js';
 
+/**
+ * No baseURL here on purpose. It would be resolved when this file loads, which
+ * forces every run to define every URL. Each page object asks env for the base
+ * URL of the site it drives, so a project only needs its own variables.
+ */
 export default defineConfig({
   testDir: './tests',
-  globalSetup: './tests/global.setup.ts',
   timeout: 60_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   reporter: [['list'], ['html', { outputFolder: 'reports', open: 'never' }]],
   use: {
-    baseURL: env.boltBaseUrl,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -27,7 +30,7 @@ export default defineConfig({
     {
       name: 'blogspot',
       testDir: './tests/blogspot',
-      use: { ...devices['Desktop Chrome'], baseURL: env.blogspotBaseUrl },
+      use: { ...devices['Desktop Chrome'] },
       workers: env.workers,
     },
     {

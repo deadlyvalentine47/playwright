@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { env } from '../../utils/env.js';
 
 export type DateOfBirth = {
   year: number;
@@ -28,7 +29,9 @@ export class BoltOnboardingPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/onboarding/application-form', { waitUntil: 'networkidle' });
+    await this.page.goto(new URL('/onboarding/application-form', env.boltBaseUrl).toString(), {
+      waitUntil: 'networkidle',
+    });
     await this.birthDate.waitFor({ state: 'visible' });
   }
 

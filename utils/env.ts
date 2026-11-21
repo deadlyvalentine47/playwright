@@ -9,8 +9,8 @@ export class MissingEnvVarError extends Error {
   constructor(name: string) {
     super(
       `Missing required env var ${name} in ${ENV_FILE}.\n` +
-        'Locally: copy .env.example and fill it in. In CI: set it as an ' +
-        'environment variable or secret on the target environment.',
+        'Locally: copy .env.example and fill it in. In CI: set it on the ' +
+        'GitHub Environment selected by the workflow.',
     );
     this.name = 'MissingEnvVarError';
   }
@@ -46,7 +46,10 @@ function optionalFlag(name: string, fallback: boolean): boolean {
 
 /**
  * Typed boundary between untyped environment strings and the framework.
- * Values are read lazily so running one project does not require the other's config.
+ *
+ * Every value is lazy. Nothing is read when this module loads, so running the
+ * blogspot project does not require BOLT_BASE_URL and vice versa. That is what
+ * lets a CI job declare only the variables its own suite needs.
  */
 export const env = {
   get envFile(): string {
@@ -81,13 +84,25 @@ export const env = {
   /**
    * One line that catches "stage build running QA config": when enabled, every
    * target URL must contain the environment name. Off by default because this
-   * repo's demo targets are identical across environments; a real deployment
-   * turns it on and every hostname carries its env.
+   * repo's demo targets are identical across environments.
    */
   get urlMustContainEnv(): boolean {
     return optionalFlag('URL_MUST_CONTAIN_ENV', false);
   },
 };
+
+/** Base URL for a project, resolved at use time rather than config load time. */
+export function baseUrlFor(project: string): string {
+  switch (project) {
+    case 'blogspot':
+      return env.blogspotBaseUrl;
+    case 'bolt':
+    case 'bolt-auth':
+      return env.boltBaseUrl;
+    default:
+      throw new Error(`No base URL configured for project "${project}"`);
+  }
+}
 
 export class EnvironmentMismatchError extends Error {
   constructor(variable: string, url: string, expectedEnv: string) {
@@ -101,19 +116,17 @@ export class EnvironmentMismatchError extends Error {
 }
 
 /**
- * Fails when a run is pointed at the wrong environment. Call this in global
- * setup so a mismatch stops the suite before the first test.
+ * Fails when a run is pointed at the wrong environment. Called from global
+ * setup for the projects that are actually selected.
  */
-export function assertEnvironmentMatches(): void {
+export function assertEnvironmentMatches(project: string): void {
   if (!env.urlMustContainEnv) {
     return;
   }
-  for (const [variable, url] of [
-    ['BLOGSPOT_BASE_URL', env.blogspotBaseUrl],
-    ['BOLT_BASE_URL', env.boltBaseUrl],
-  ] as const) {
-    if (!url.toLowerCase().includes(env.name.toLowerCase())) {
-      throw new EnvironmentMismatchError(variable, url, env.name);
-    }
+  const variable = project === 'blogspot' ? 'BLOGSPOT_BASE_URL' : 'BOLT_BASE_URL';
+  const url = baseUrlFor(project);
+
+  if (!url.toLowerCase().includes(env.name.toLowerCase())) {
+    throw new EnvironmentMismatchError(variable, url, env.name);
   }
 }

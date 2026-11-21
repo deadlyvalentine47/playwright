@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { env } from '../../utils/env.js';
 
 export class BasePage {
   readonly page: Page;
@@ -8,10 +9,13 @@ export class BasePage {
   }
 
   /**
-   * Resolves against the project's baseURL, which comes from the active env file.
+   * Resolves against BLOGSPOT_BASE_URL, read at call time so the config file
+   * does not need it in order to load.
    */
   async goto(path = '/'): Promise<void> {
-    await this.page.goto(path, { waitUntil: 'domcontentloaded' });
+    await this.page.goto(new URL(path, env.blogspotBaseUrl).toString(), {
+      waitUntil: 'domcontentloaded',
+    });
   }
 }
 

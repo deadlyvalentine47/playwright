@@ -19,24 +19,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Public suite. Needs no credentials, so it runs on pull requests too.
-  #
-  # This job does not select an environment: it targets one public site whose
-  # URL is not a secret, so there is nothing to configure per environment.
+  # Public suite: targets one public site, needs no credentials. Runs on PRs too,
+  # so it declares no environment and exactly one URL — its own.
   blogspot:
-    timeout-minutes: 30
+    timeout-minutes: 20
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
+    env:
+      CI: true
+      APP_ENV: public
+      # A file that does not exist: in CI nothing is read from disk.
+      ENV_FILE: .env.missing
+      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
+      WORKERS: 4
+      RETRIES: 2
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       # Some images set NODE_ENV=production, which makes npm skip every
@@ -48,31 +49,21 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run blogspot suite
-        run: npx playwright test --project=blogspot --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-        env:
-          CI: true
-          APP_ENV: public
-          ENV_FILE: .env.missing
-          BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
-          BOLT_BASE_URL: https://testautomationpractice.blogspot.com/
-          WORKERS: 2
-          RETRIES: 2
+        run: npx playwright test --project=blogspot
 
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: blogspot-report-${{ matrix.shardIndex }}
+          name: blogspot-report
           path: |
             reports/
             screenshots/
           retention-days: 14
 
-  # Authenticated suite. Targets whichever GitHub Environment the run names.
-  #
-  # `environment:` is the single source of truth. Every secret below resolves
-  # from THAT environment's settings — the repo contains no URLs and no
-  # credentials. Change a hostname in Settings > Environments, not in a commit.
+  # Authenticated suite. The GitHub Environment named here is the single source
+  # of truth: it supplies BOLT_BASE_URL and the credentials. BLOGSPOT_BASE_URL is
+  # absent on purpose — this project never touches it.
   bolt:
     timeout-minutes: 30
     runs-on: ubuntu-latest
@@ -81,15 +72,13 @@ jobs:
     env:
       CI: true
       APP_ENV: ${{ inputs.target || 'qa' }}
-      # Deliberately a file that does not exist: in CI nothing comes from a file,
-      # only from this environment's injected values.
       ENV_FILE: .env.missing
-      # `vars || secrets` so a value works whether it is classified as a variable
-      # (non-secret, like a public URL) or a secret. GitHub does not fall back
-      # between the two on its own: a missing secret resolves to an empty string.
-      BLOGSPOT_BASE_URL: ${{ vars.BLOGSPOT_BASE_URL || secrets.BLOGSPOT_BASE_URL }}
+      # `vars || secrets` so moving a value between variable and secret does not
+      # need a workflow edit. GitHub does not fall back on its own: a missing
+      # secret resolves to an empty string, which is what broke this job before.
       BOLT_BASE_URL: ${{ vars.BOLT_BASE_URL || secrets.BOLT_BASE_URL }}
       BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
+      BOLT_AUTH_STATE: .auth/bolt.json
       WORKERS: 1
       RETRIES: 2
       # Turn on when every hostname contains its environment name (api.qa...,
@@ -100,14 +89,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci --include=dev
 
       - name: Validate environment
-        run: npx tsx scripts/check-env.ts
+        run: npx tsx scripts/check-env.ts bolt
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
