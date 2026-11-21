@@ -17,6 +17,7 @@ data-driven specs, environment config, and CI. Adaptable to any web application.
 ├── pages/
 │   ├── blogspot/            # One page object per widget
 │   └── bolt/
+├── components/              # Cross-page objects (header, nav)
 ├── testdata/                # JSON fixtures, grouped by target
 ├── utils/dataProvider.js    # Reads a JSON fixture with a clear error if missing
 ├── playwright.config.js
@@ -44,8 +45,18 @@ npm run report             # open the last HTML report
 
 ## Design decisions
 
+**Page objects own page-specific selectors; component objects own the cross-page ones.**
+`components/` holds the header and navigation that appear on every page of the blog. A lock
+classic mistake is one giant `locators.js`; it has no owner, dead entries accumulate invisibly,
+and nothing tells you which ones are still used. Page-specific selectors stay next to the
+behaviour that drives them, shared ones get a component with its own spec.
+
 **Page objects own every selector.** No spec contains a raw locator. If a selector breaks,
 exactly one file changes.
+
+**Specs own every assertion.** Page objects expose state and actions only; no `expect` appears
+under `pages/`. A page can then be reused with different expectations, and a spec reads
+top-to-bottom on its own.
 
 **No `waitForTimeout`.** Every wait is a web-first assertion
 (`expect(locator).toBeVisible()`) or an event promise (`page.waitForEvent('popup')`).
@@ -93,7 +104,7 @@ contexts, and two concurrent auth setups tear `.auth/bolt.json`. So the `bolt` a
 
 ## Coverage
 
-12 live tests across 5 widgets: toggle button state machine, sortable product table with
+18 live tests across 5 widgets and the shared site chrome: toggle button state machine, sortable product table with
 pagination, alert/confirm/prompt dialogs, jQuery UI date picker, and multi-window popups.
 
 `WEB_AUTOMATION_FEATURES.md` is the longer checklist of web features worth automating, with a
