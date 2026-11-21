@@ -35,7 +35,7 @@ cp .env.example .env      # then fill in the URLs you need
 
 ```bash
 npm test                   # everything
-npm run test:blogspot      # the live suite only
+npm run test:blogspot      # the public suite only
 npm run test:repeat        # everything, 3x — flake check
 npm run test:headed        # watch the browser
 npm run test:debug         # Playwright inspector
@@ -65,17 +65,31 @@ nobody opens. `trace: 'on-first-retry'` gives you the failing attempt's trace an
 **Workers capped at 4.** The public target rate-limits concurrent connections; more workers
 does not mean faster, it means timeouts.
 
-## Skipped suites
+## Live suites
 
-`tests/bolt/` targets a third-party brokerage. Those specs are wrapped in
-`test.describe.skip` on purpose:
+**blogspot** — 12 tests on a public practice site. Fast, no auth, safe to run anywhere.
 
-- they mutate real state on someone else's system (account creation, payment splits)
-- the credentials are a throwaway account that expires
-- one of them is structurally broken in its original form and is kept only as a record
+**bolt** — 10 tests against a real brokerage app. The credentials in `testdata/bolt/` are
+live and they work:
 
-They are skipped, not deleted, so the intent stays visible. Point them at a disposable
-environment before re-enabling.
+- login with valid credentials reaches onboarding
+- login with a wrong password is rejected
+- the onboarding date picker opens, selects a year/month/day, and writes `01/15/1999`
+- the onboarding wizard reports step 2 of 8 and shows its progress rail
+
+Run `bolt-auth` first (or use `npm test`, which runs it as a dependency) to produce
+`.auth/bolt.json`; the bolt specs reuse that session instead of logging in per test.
+
+**Two specs are still skipped**, and the reasons are in the files:
+
+- `dropdown` — the country dropdown was on the registration form. `/signup`, `/register`,
+  `/join` and `/create-account` all render empty shells now; the public signup flow is gone.
+- `paymentFlow` — commission splits live inside a deal, which needs an account past
+  onboarding (this one is at step 2 of 8). Needs a seeded tenant.
+
+**Concurrency:** the bolt app invalidates a session shared by several concurrent browser
+contexts, and two concurrent auth setups tear `.auth/bolt.json`. So the `bolt` and
+`bolt-auth` projects run with `workers: 1`, while blogspot stays at 4.
 
 ## Coverage
 

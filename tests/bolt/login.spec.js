@@ -1,21 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { getTestData } from '../../utils/dataProvider.js';
-import { HomePage } from '../../pages/bolt/homePage.js';
+import { BoltLoginPage } from '../../pages/bolt/login.page.js';
 
-// SKIPPED: targets bolt.playrealbrokerage.com, a third-party brokerage. Needs a real
-// account, is rate-limited, and would create real state on someone else's system.
-// Re-enable when pointed at a disposable environment.
-test.describe.skip('Bolt — login', () => {
+test.describe('Bolt — login', () => {
   const testData = getTestData('testdata/bolt/login.json');
 
   for (const testcase of testData) {
-    test(testcase.testName, async ({ page }) => {
-      const homePage = new HomePage(page, testcase);
+    test(`${testcase.testName} — valid credentials reach onboarding`, async ({ page }) => {
+      const login = new BoltLoginPage(page);
 
-      await homePage.navigateToHomePage();
-      await homePage.login();
+      await login.goto();
+      await login.loginAs(testcase);
+      await login.expectAuthenticated();
 
-      await expect(page).not.toHaveURL(/login/);
+      await expect(page).toHaveURL(/onboarding|dashboard/);
+      await expect(page.locator('body')).not.toBeEmpty();
     });
   }
+
+  test('rejects a wrong password', async ({ page }) => {
+    const login = new BoltLoginPage(page);
+
+    await login.goto();
+    await login.loginAs({ email: testData[0].email, password: 'definitely-not-the-password' });
+
+    await login.expectLoginRejected();
+  });
 });

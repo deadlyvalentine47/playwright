@@ -1,17 +1,11 @@
-import { expect, test } from '@playwright/test';
-import { HomePage } from '../../pages/bolt/homePage.js';
+import { test } from '@playwright/test';
 
-// SKIPPED: same third-party brokerage. The original asserted nothing — it opened the
-// date picker and console.logged the month options.
+// SKIPPED: the country dropdown was on the registration form. `/signup`, `/register`,
+// `/join` and `/create-account` all render an empty shell now — the public signup flow
+// has been removed, and the authenticated account is parked mid-onboarding, so this
+// widget is not reachable. Comment kept so the intent survives.
 test.describe.skip('Bolt — dropdown', () => {
-  test('selects Canada from the country dropdown', async ({ page }) => {
-    const homepage = new HomePage(page);
-
-    await homepage.navigateToHomePage();
-    await page.getByRole('link', { name: 'Join Real' }).click();
-    await page.locator('.mantine-Select-input').click();
-
-    await page.getByRole('option', { name: 'Canada' }).click();
-    await expect(page.getByRole('option', { name: 'Canada' })).toBeHidden();
+  test('selects Canada from the country dropdown', async () => {
+    throw new Error('unreachable — registration form no longer exists');
   });
 });

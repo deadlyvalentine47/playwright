@@ -1,25 +1,27 @@
 import { expect, test } from '@playwright/test';
-import { getTestData } from '../../utils/dataProvider.js';
-import { HomePage } from '../../pages/bolt/homePage.js';
-import { CreateAccount } from '../../pages/bolt/createAccountPage.js';
+import { BoltOnboardingPage } from '../../pages/bolt/onboarding.page.js';
 
-// SKIPPED: writes a real user to a third-party brokerage on every run. The original
-// comment in this spec admits it: "we can add a delete function to delete data of user
-// from db so the testcase will run for same data". Until there is teardown, this cannot
-// be a repeatable test.
-test.describe.skip('Bolt — create account', () => {
-  const testData = getTestData('testdata/bolt/e2eTestData.json');
+test.use({ storageState: '.auth/bolt.json' });
 
-  for (const testcase of testData) {
-    test(testcase.testName, async ({ page }) => {
-      const homepage = new HomePage(page);
-      const createAccountForm = new CreateAccount(page, testcase);
+// The onboarding wizard is a multi-step form; `Join Real` no longer exists on the
+// marketing site. This asserts the step the account is actually parked on.
+test.describe('Bolt — onboarding', () => {
+  test('lands on the application form at step 2 of 8', async ({ page }) => {
+    const ui = new BoltOnboardingPage(page);
 
-      await homepage.navigateToHomePage();
-      await homepage.signUp();
-      await createAccountForm.fillform();
+    await ui.goto();
 
-      await expect(page).not.toHaveURL(/join/);
-    });
-  }
+    await expect(page).toHaveURL(/onboarding\/application-form/);
+    await expect(page.getByText(/2\s*\/\s*8/)).toBeVisible();
+  });
+
+  test('shows the onboarding progress rail', async ({ page }) => {
+    const ui = new BoltOnboardingPage(page);
+
+    await ui.goto();
+
+    for (const step of ['Create Account', 'Application Form', 'Application Fee', 'Join Boards']) {
+      await expect(page.getByText(step).first()).toBeVisible();
+    }
+  });
 });

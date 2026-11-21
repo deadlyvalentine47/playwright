@@ -1,21 +1,39 @@
 import { expect, test } from '@playwright/test';
-import { getTestData } from '../../utils/dataProvider.js';
-import { HomePage } from '../../pages/bolt/homePage.js';
+import { BoltOnboardingPage } from '../../pages/bolt/onboarding.page.js';
 
-// SKIPPED: third-party brokerage. Original had zero assertions — it clicked the date
-// input and printed the month options to the console.
-test.describe.skip('Bolt — date picker', () => {
-  const testData = getTestData('testdata/bolt/datePicker.json');
+test.use({ storageState: '.auth/bolt.json' });
 
-  for (const testcase of testData) {
-    test('opens the birth date picker', async ({ page }) => {
-      const hp = new HomePage(page, testcase);
+test.describe('Bolt — onboarding date picker', () => {
+  test.beforeEach(async ({ page }) => {
+    await new BoltOnboardingPage(page).goto();
+  });
 
-      await hp.navigateToHomePage();
-      await hp.login();
+  test('opens a calendar with selectable month and year', async ({ page }) => {
+    const ui = new BoltOnboardingPage(page);
 
-      await page.locator('#birthDate').click();
-      await expect(page.locator('.react-datepicker__month-select').first()).toBeVisible();
-    });
-  }
+    await ui.openDatePicker();
+
+    await expect(ui.datePicker).toBeVisible();
+    expect(await ui.monthSelect.locator('option').count()).toBe(12);
+    expect(await ui.yearSelect.locator('option').count()).toBeGreaterThan(50);
+  });
+
+  test('selecting a date of birth populates the field', async ({ page }) => {
+    const ui = new BoltOnboardingPage(page);
+
+    await ui.selectDateOfBirth({ year: 1999, month: 0, day: 15 });
+
+    expect(await ui.birthDateValue()).toBe('01/15/1999');
+    await expect(ui.nextButton).toBeEnabled();
+  });
+
+  test('re-opening the picker keeps the selected date', async ({ page }) => {
+    const ui = new BoltOnboardingPage(page);
+
+    await ui.selectDateOfBirth({ year: 1999, month: 0, day: 15 });
+    await ui.openDatePicker();
+
+    await expect(ui.datePicker).toBeVisible();
+    expect(await ui.birthDateValue()).toBe('01/15/1999');
+  });
 });

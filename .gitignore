@@ -9,3 +9,6 @@ screenshots/
 .env
 .env.*
 !.env.example
+
+# Playwright auth state
+.auth/
