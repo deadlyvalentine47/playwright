@@ -84,8 +84,11 @@ jobs:
       # Deliberately a file that does not exist: in CI nothing comes from a file,
       # only from this environment's injected values.
       ENV_FILE: .env.missing
-      BLOGSPOT_BASE_URL: ${{ secrets.BLOGSPOT_BASE_URL }}
-      BOLT_BASE_URL: ${{ secrets.BOLT_BASE_URL }}
+      # `vars || secrets` so a value works whether it is classified as a variable
+      # (non-secret, like a public URL) or a secret. GitHub does not fall back
+      # between the two on its own: a missing secret resolves to an empty string.
+      BLOGSPOT_BASE_URL: ${{ vars.BLOGSPOT_BASE_URL || secrets.BLOGSPOT_BASE_URL }}
+      BOLT_BASE_URL: ${{ vars.BOLT_BASE_URL || secrets.BOLT_BASE_URL }}
       BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
       WORKERS: 1
       RETRIES: 2
