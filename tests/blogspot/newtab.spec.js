@@ -7,13 +7,26 @@ test.describe('Popups and new tabs', () => {
   });
 
   test('opens both popup windows and resolves them by URL', async ({ page }) => {
-    const ui = new PopupPage(page);
+    const ui = new PopupPage(page).trackPopups();
 
-    const popups = await ui.openTwoPopups();
-    expect(popups).toHaveLength(2);
+    await ui.triggerPopups();
 
-    const seleniumPopup = ui.popupByUrl(popups, 'selenium.dev');
-    const playwrightPopup = ui.popupByUrl(popups, 'playwright.dev');
+    await expect
+      .poll(() => ui.popupCount(), { message: 'waiting for 2 popups', timeout: 15000 })
+      .toBe(2);
+
+    await ui.waitForPopupsToLoad();
+
+    await expect
+      .poll(() => ui.popupUrls().sort().join(' '), { timeout: 15000 })
+      .toContain('playwright.dev');
+    expect(ui.popupUrls().sort().join(' ')).toContain('selenium.dev');
+
+    const seleniumPopup = ui.popupByUrl('selenium.dev');
+    const playwrightPopup = ui.popupByUrl('playwright.dev');
+
+    expect(seleniumPopup).toBeTruthy();
+    expect(playwrightPopup).toBeTruthy();
 
     await expect(seleniumPopup).toHaveTitle('Selenium');
     await expect(playwrightPopup).toHaveTitle(/Playwright/);

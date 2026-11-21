@@ -1,5 +1,3 @@
-import { expect } from '@playwright/test';
-
 export class BoltOnboardingPage {
   constructor(page) {
     this.page = page;
@@ -9,16 +7,17 @@ export class BoltOnboardingPage {
     this.yearSelect = this.datePicker.locator('.react-datepicker__year-select');
     this.nextButton = page.getByRole('button', { name: 'Next' });
     this.previousButton = page.getByRole('button', { name: 'Previous' });
+    this.progress = page.getByText(/\d+\s*\/\s*8/);
   }
 
   async goto() {
     await this.page.goto('/onboarding/application-form', { waitUntil: 'networkidle' });
-    await expect(this.birthDate).toBeVisible();
+    await this.birthDate.waitFor({ state: 'visible' });
   }
 
   async openDatePicker() {
     await this.birthDate.click();
-    await expect(this.datePicker).toBeVisible();
+    await this.datePicker.waitFor({ state: 'visible' });
   }
 
   async selectDateOfBirth({ year, month, day }) {
@@ -30,10 +29,18 @@ export class BoltOnboardingPage {
       .filter({ hasText: new RegExp(`^${day}$`) })
       .first()
       .click();
-    await expect(this.datePicker).toBeHidden();
+    await this.datePicker.waitFor({ state: 'hidden' });
   }
 
   async birthDateValue() {
     return this.birthDate.inputValue();
+  }
+
+  async monthOptionCount() {
+    return this.monthSelect.locator('option').count();
+  }
+
+  async yearOptionCount() {
+    return this.yearSelect.locator('option').count();
   }
 }

@@ -1,4 +1,3 @@
-import { expect } from '@playwright/test';
 import { BasePage } from './base.page.js';
 
 export class DatePickerPage extends BasePage {
@@ -14,23 +13,27 @@ export class DatePickerPage extends BasePage {
 
   async open() {
     await this.input.click();
-    await expect(this.calendar).toBeVisible();
+    await this.calendar.waitFor({ state: 'visible' });
   }
 
   async currentMonthLabel() {
-    return (await this.calendarTitle.textContent()).replace(/\s+/g, ' ').trim();
+    const label = await this.calendarTitle.textContent();
+    return label.replace(/\s+/g, ' ').trim();
   }
 
   async goToNextMonth() {
     const before = await this.currentMonthLabel();
     await this.nextButton.click();
-    await expect(this.calendarTitle).not.toHaveText(before);
+    await this.page.waitForFunction(
+      (previous) => document.querySelector('.ui-datepicker-title')?.textContent.trim() !== previous,
+      before,
+    );
     return this.currentMonthLabel();
   }
 
   async selectDay(day) {
     await this.days.filter({ hasText: new RegExp(`^${day}$`) }).first().click();
-    await expect(this.calendar).toBeHidden();
+    await this.calendar.waitFor({ state: 'hidden' });
   }
 
   async value() {

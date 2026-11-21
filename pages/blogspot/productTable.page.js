@@ -1,4 +1,3 @@
-import { expect } from '@playwright/test';
 import { BasePage } from './base.page.js';
 
 export class ProductTablePage extends BasePage {
@@ -10,8 +9,12 @@ export class ProductTablePage extends BasePage {
     this.pagination = page.locator('#pagination li a');
   }
 
-  async expectLoaded() {
-    await expect(this.table).toBeVisible();
+  rowByName(name) {
+    return this.rows.filter({ hasText: name });
+  }
+
+  pageLink(n) {
+    return this.pagination.filter({ hasText: new RegExp(`^${n}$`) });
   }
 
   async columnCount() {
@@ -27,20 +30,11 @@ export class ProductTablePage extends BasePage {
     return names.map((n) => n.trim());
   }
 
-  rowByName(name) {
-    return this.rows.filter({ hasText: name });
-  }
-
   async selectRow(name) {
-    const row = this.rowByName(name);
-    await expect(row).toHaveCount(1);
-    await row.locator('input').check();
-    await expect(row.locator('input')).toBeChecked();
+    await this.rowByName(name).locator('input').check();
   }
 
   async goToPage(n) {
-    const link = this.pagination.filter({ hasText: new RegExp(`^${n}$`) });
-    await link.click();
-    await expect(link).toHaveClass(/\bactive\b/);
+    await this.pageLink(n).click();
   }
 }

@@ -1,4 +1,3 @@
-import { expect } from '@playwright/test';
 import { getTestData } from '../../utils/dataProvider.js';
 
 export class BoltLoginPage {
@@ -11,7 +10,7 @@ export class BoltLoginPage {
 
   async goto() {
     await this.page.goto(process.env.BOLT_URL, { waitUntil: 'networkidle' });
-    await expect(this.usernameInput).toBeVisible();
+    await this.usernameInput.waitFor({ state: 'visible' });
   }
 
   async loginAs(credentials) {
@@ -26,11 +25,11 @@ export class BoltLoginPage {
     return credentials;
   }
 
-  async expectAuthenticated() {
-    await expect(this.page).not.toHaveURL(/\/login/, { timeout: 15000 });
+  async waitForAuthenticated() {
+    await this.page.waitForURL(/onboarding|dashboard/, { timeout: 20000 });
   }
 
-  async expectLoginRejected() {
-    await expect(this.page).toHaveURL(/\/login/, { timeout: 15000 });
+  async waitForRejected() {
+    await this.page.waitForURL(/\/login/, { timeout: 20000 });
   }
 }

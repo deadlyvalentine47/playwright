@@ -7,7 +7,7 @@ test.describe('Product table', () => {
   test.beforeEach(async ({ page }) => {
     const ui = new ProductTablePage(page);
     await ui.goto();
-    await ui.expectLoaded();
+    await expect(ui.table).toBeVisible();
   });
 
   test('renders the expected columns and rows', async ({ page }) => {
@@ -24,6 +24,9 @@ test.describe('Product table', () => {
     expect(await ui.productsOnPage()).toEqual(PAGE_ONE);
 
     await ui.selectRow('Smartphone');
+
+    await expect(ui.rowByName('Smartphone').locator('input')).toBeChecked();
+    await expect(ui.rowByName('Laptop').locator('input')).not.toBeChecked();
   });
 
   test('pagination swaps the visible page and marks it active', async ({ page }) => {
@@ -32,6 +35,9 @@ test.describe('Product table', () => {
     expect(await ui.productsOnPage()).toEqual(PAGE_ONE);
 
     await ui.goToPage(2);
+
+    await expect(ui.pageLink(2)).toHaveClass(/\bactive\b/);
+    await expect(ui.pageLink(1)).not.toHaveClass(/\bactive\b/);
 
     const pageTwo = await ui.productsOnPage();
     expect(pageTwo).not.toEqual(PAGE_ONE);

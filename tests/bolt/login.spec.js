@@ -11,9 +11,9 @@ test.describe('Bolt — login', () => {
 
       await login.goto();
       await login.loginAs(testcase);
-      await login.expectAuthenticated();
+      await login.waitForAuthenticated();
 
-      await expect(page).toHaveURL(/onboarding|dashboard/);
+      expect(page.url()).toMatch(/onboarding|dashboard/);
       await expect(page.locator('body')).not.toBeEmpty();
     });
   }
@@ -23,7 +23,8 @@ test.describe('Bolt — login', () => {
 
     await login.goto();
     await login.loginAs({ email: testData[0].email, password: 'definitely-not-the-password' });
+    await login.waitForRejected();
 
-    await login.expectLoginRejected();
+    expect(page.url()).toMatch(/\/login/);
   });
 });

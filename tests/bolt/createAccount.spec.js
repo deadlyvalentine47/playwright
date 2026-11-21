@@ -3,8 +3,6 @@ import { BoltOnboardingPage } from '../../pages/bolt/onboarding.page.js';
 
 test.use({ storageState: '.auth/bolt.json' });
 
-// The onboarding wizard is a multi-step form; `Join Real` no longer exists on the
-// marketing site. This asserts the step the account is actually parked on.
 test.describe('Bolt — onboarding', () => {
   test('lands on the application form at step 2 of 8', async ({ page }) => {
     const ui = new BoltOnboardingPage(page);
@@ -12,7 +10,7 @@ test.describe('Bolt — onboarding', () => {
     await ui.goto();
 
     await expect(page).toHaveURL(/onboarding\/application-form/);
-    await expect(page.getByText(/2\s*\/\s*8/)).toBeVisible();
+    await expect(ui.progress).toHaveText(/2\s*\/\s*8/);
   });
 
   test('shows the onboarding progress rail', async ({ page }) => {

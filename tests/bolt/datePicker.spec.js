@@ -14,8 +14,8 @@ test.describe('Bolt — onboarding date picker', () => {
     await ui.openDatePicker();
 
     await expect(ui.datePicker).toBeVisible();
-    expect(await ui.monthSelect.locator('option').count()).toBe(12);
-    expect(await ui.yearSelect.locator('option').count()).toBeGreaterThan(50);
+    expect(await ui.monthOptionCount()).toBe(12);
+    expect(await ui.yearOptionCount()).toBeGreaterThan(50);
   });
 
   test('selecting a date of birth populates the field', async ({ page }) => {
