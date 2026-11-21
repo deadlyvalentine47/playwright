@@ -31,7 +31,15 @@ export class PopupPage extends BasePage {
   }
 
   async waitForPopupsToLoad(): Promise<void> {
-    await Promise.all(this.collectedPopups.map((p) => p.waitForLoadState().catch(() => {})));
+    // external sites are asset-heavy; waiting for the full 'load' event under parallel
+    // load can exceed the test timeout, and the URL is committed before assets finish
+    await Promise.all(
+      this.collectedPopups.map((p) =>
+        p
+          .waitForLoadState('domcontentloaded', { timeout: 15000 })
+          .catch(() => undefined),
+      ),
+    );
   }
 
   async openSinglePopup(buttonName: string): Promise<Page> {

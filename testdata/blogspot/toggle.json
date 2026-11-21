@@ -1,0 +1,20 @@
+[
+  {
+    "label": "initial",
+    "expectedText": "START",
+    "expectedName": "start",
+    "expectedClass": "start"
+  },
+  {
+    "label": "after first click",
+    "expectedText": "STOP",
+    "expectedName": "stop",
+    "expectedClass": "stop"
+  },
+  {
+    "label": "after second click",
+    "expectedText": "START",
+    "expectedName": "start",
+    "expectedClass": "start"
+  }
+]

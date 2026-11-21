@@ -20,6 +20,8 @@ data-driven specs, environment config, and CI. Adaptable to any web application.
 │   └── bolt/
 ├── components/              # Cross-page objects (header, nav)
 ├── testdata/                # JSON fixtures, grouped by target
+│   ├── blogspot/
+│   └── bolt/
 ├── utils/dataProvider.ts    # Typed JSON fixture loader
 ├── playwright.config.ts
 └── package.json
@@ -58,6 +60,11 @@ exactly one file changes.
 **Specs own every assertion.** Page objects expose state and actions only; no `expect` appears
 under `pages/`. A page can then be reused with different expectations, and a spec reads
 top-to-bottom on its own.
+
+**All specs are data-driven.** Every assertion value lives in `testdata/`, loaded through
+`utils/fixtures.ts` which types each fixture shape. Adding a case means adding a JSON entry,
+not editing a spec — the product table spec generates one test per fixture page (4 today),
+and the dialog spec generates one per fixture case.
 
 **No `waitForTimeout`.** Every wait is a web-first assertion
 (`expect(locator).toBeVisible()`) or an event promise (`page.waitForEvent('popup')`).

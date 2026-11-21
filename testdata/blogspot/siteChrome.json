@@ -1,0 +1,21 @@
+{
+  "pages": [
+    { "label": "home", "path": "" },
+    { "label": "playwright practice", "path": "p/playwrightpractice.html" }
+  ],
+  "expectedTitle": "Automation Testing Practice",
+  "expectedDescription": "For Selenium, Cypress & Playwright",
+  "expectedNavLabels": [
+    "Home",
+    "Udemy Courses",
+    "Online Trainings",
+    "Blog",
+    "PlaywrightPractice",
+    "Hidden Elements & AJAX",
+    "Download Files"
+  ],
+  "linkWithHref": {
+    "label": "PlaywrightPractice",
+    "hrefPattern": "playwrightpractice"
+  }
+}

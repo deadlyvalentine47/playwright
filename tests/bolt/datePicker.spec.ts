@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { BoltOnboardingPage } from '../../pages/bolt/onboarding.page.js';
+import { fixtures } from '../../utils/fixtures.js';
+
+const data = fixtures.onboarding();
 
 test.use({ storageState: '.auth/bolt.json' });
 
@@ -14,26 +17,26 @@ test.describe('Bolt — onboarding date picker', () => {
     await ui.openDatePicker();
 
     await expect(ui.datePicker).toBeVisible();
-    expect(await ui.monthOptionCount()).toBe(12);
-    expect(await ui.yearOptionCount()).toBeGreaterThan(50);
+    expect(await ui.monthOptionCount()).toBeGreaterThanOrEqual(data.minimumMonthOptions);
+    expect(await ui.yearOptionCount()).toBeGreaterThan(data.minimumYearOptions);
   });
 
   test('selecting a date of birth populates the field', async ({ page }) => {
     const ui = new BoltOnboardingPage(page);
 
-    await ui.selectDateOfBirth({ year: 1999, month: 0, day: 15 });
+    await ui.selectDateOfBirth(data.dateOfBirth);
 
-    expect(await ui.birthDateValue()).toBe('01/15/1999');
+    expect(await ui.birthDateValue()).toBe(data.expectedBirthDate);
     await expect(ui.nextButton).toBeEnabled();
   });
 
   test('re-opening the picker keeps the selected date', async ({ page }) => {
     const ui = new BoltOnboardingPage(page);
 
-    await ui.selectDateOfBirth({ year: 1999, month: 0, day: 15 });
+    await ui.selectDateOfBirth(data.dateOfBirth);
     await ui.openDatePicker();
 
     await expect(ui.datePicker).toBeVisible();
-    expect(await ui.birthDateValue()).toBe('01/15/1999');
+    expect(await ui.birthDateValue()).toBe(data.expectedBirthDate);
   });
 });

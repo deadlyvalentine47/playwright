@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { ProductTablePage } from '../../pages/blogspot/productTable.page.js';
+import { fixtures } from '../../utils/fixtures.js';
 
-const PAGE_ONE = ['Smartphone', 'Laptop', 'Tablet', 'Smartwatch', 'Wireless Earbuds'];
+const data = fixtures.productTable();
+const pageOne = data.pages.find((p) => p.page === 1)!;
 
 test.describe('Product table', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,34 +15,37 @@ test.describe('Product table', () => {
   test('renders the expected columns and rows', async ({ page }) => {
     const ui = new ProductTablePage(page);
 
-    expect(await ui.columnCount()).toBe(4);
-    expect(await ui.rowCount()).toBe(5);
-    await expect(ui.headers).toHaveText(['ID', 'Name', 'Price', 'Select']);
+    expect(await ui.columnCount()).toBe(data.columnCount);
+    expect(await ui.rowCount()).toBe(data.rowsPerPage);
+    await expect(ui.headers).toHaveText(data.headers);
   });
 
   test('selects a single row by product name', async ({ page }) => {
     const ui = new ProductTablePage(page);
 
-    expect(await ui.productsOnPage()).toEqual(PAGE_ONE);
+    expect(await ui.productsOnPage()).toEqual(pageOne.products.map((p) => p.name));
 
-    await ui.selectRow('Smartphone');
+    await ui.selectRow(data.selection.select);
 
-    await expect(ui.rowByName('Smartphone').locator('input')).toBeChecked();
-    await expect(ui.rowByName('Laptop').locator('input')).not.toBeChecked();
+    await expect(ui.rowByName(data.selection.select).locator('input')).toBeChecked();
+    await expect(ui.rowByName(data.selection.leaveChecked).locator('input')).not.toBeChecked();
   });
 
-  test('pagination swaps the visible page and marks it active', async ({ page }) => {
-    const ui = new ProductTablePage(page);
+  for (const pageData of data.pages) {
+    test(`pagination renders page ${pageData.page}`, async ({ page }) => {
+      const ui = new ProductTablePage(page);
 
-    expect(await ui.productsOnPage()).toEqual(PAGE_ONE);
+      if (pageData.page > 1) {
+        await ui.goToPage(pageData.page);
+      }
 
-    await ui.goToPage(2);
+      for (const product of pageData.products) {
+        await expect(ui.rowByName(product.name)).toHaveCount(1);
+        await expect(ui.rowByName(product.name)).toContainText(product.price);
+      }
 
-    await expect(ui.pageLink(2)).toHaveClass(/\bactive\b/);
-    await expect(ui.pageLink(1)).not.toHaveClass(/\bactive\b/);
-
-    const pageTwo = await ui.productsOnPage();
-    expect(pageTwo).not.toEqual(PAGE_ONE);
-    expect(pageTwo).toHaveLength(5);
-  });
+      expect(await ui.productsOnPage()).toEqual(pageData.products.map((p) => p.name));
+      await expect(ui.pageLink(pageData.page)).toHaveClass(/\bactive\b/);
+    });
+  }
 });

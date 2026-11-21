@@ -8,7 +8,12 @@ export function getTestData<T>(jsonFilePath: string): T[] {
   }
   const rawData = fs.readFileSync(absolutePath, 'utf-8');
   try {
-    return JSON.parse(rawData) as T[];
+    const parsed = JSON.parse(rawData) as unknown;
+    if (!Array.isArray(parsed)) {
+      // single-object fixtures are wrapped so every call site returns a list
+      return [parsed as T];
+    }
+    return parsed as T[];
   } catch {
     throw new Error(`Invalid JSON in data file: ${absolutePath}`);
   }

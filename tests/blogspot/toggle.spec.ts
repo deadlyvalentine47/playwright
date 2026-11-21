@@ -1,31 +1,27 @@
 import { expect, test } from '@playwright/test';
 import { ToggleButtonPage } from '../../pages/blogspot/toggle.page.js';
+import { fixtures } from '../../utils/fixtures.js';
+
+const states = fixtures.toggle();
 
 test.describe('Toggle button', () => {
   test.beforeEach(async ({ page }) => {
     await new ToggleButtonPage(page).goto();
   });
 
-  test('starts in START state', async ({ page }) => {
+  test('walks the full START -> STOP -> START cycle', async ({ page }) => {
     const ui = new ToggleButtonPage(page);
 
-    await expect(ui.button).toHaveText('START');
-    await expect(ui.button).toHaveAttribute('name', 'start');
-    await expect(ui.button).toHaveClass(/\bstart\b/);
-  });
+    for (let i = 0; i < states.length; i += 1) {
+      const state = states[i]!;
 
-  test('toggles START -> STOP -> START', async ({ page }) => {
-    const ui = new ToggleButtonPage(page);
+      if (i > 0) {
+        await ui.toggle();
+      }
 
-    await expect(ui.button).toHaveAttribute('name', 'start');
-
-    await ui.toggle();
-    await expect(ui.button).toHaveText('STOP');
-    await expect(ui.button).toHaveAttribute('name', 'stop');
-    await expect(ui.button).toHaveClass(/\bstop\b/);
-
-    await ui.toggle();
-    await expect(ui.button).toHaveText('START');
-    await expect(ui.button).toHaveAttribute('name', 'start');
+      await expect(ui.button, state.label).toHaveText(state.expectedText);
+      await expect(ui.button, state.label).toHaveAttribute('name', state.expectedName);
+      await expect(ui.button, state.label).toHaveClass(new RegExp(`\\b${state.expectedClass}\\b`));
+    }
   });
 });

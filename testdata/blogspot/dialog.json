@@ -1,0 +1,33 @@
+[
+  {
+    "testName": "simple alert shows a message and accepts",
+    "trigger": "simple",
+    "expectedType": "alert",
+    "expectedMessage": "I am an alert box!",
+    "expectedResult": null
+  },
+  {
+    "testName": "confirmation alert is dismissed",
+    "trigger": "confirmation",
+    "accept": false,
+    "expectedType": "confirm",
+    "expectedMessage": "Press a button!",
+    "expectedResult": "You pressed Cancel!"
+  },
+  {
+    "testName": "confirmation alert is accepted",
+    "trigger": "confirmation",
+    "accept": true,
+    "expectedType": "confirm",
+    "expectedMessage": "Press a button!",
+    "expectedResult": "You pressed OK!"
+  },
+  {
+    "testName": "prompt echoes the entered text",
+    "trigger": "prompt",
+    "promptText": "asdasd",
+    "expectedType": "prompt",
+    "expectedMessage": "Please enter your name:",
+    "expectedResult": "Hello asdasd! How are you today?"
+  }
+]
