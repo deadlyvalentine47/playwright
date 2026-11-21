@@ -5,10 +5,14 @@ node_modules/
 package-lock.json
 reports/
 screenshots/
-# local env
+
+# Local and per-environment files. `.env.ci` is deliberately NOT ignored: it holds
+# only non-secret configuration and is committed so CI has something to load.
 .env
-.env.*
-!.env.example
+.env.local
+.env.qa
+.env.stage
+.env.*.local
 
 # Playwright auth state
 .auth/

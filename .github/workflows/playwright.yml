@@ -2,68 +2,114 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    timeout-minutes: 60
+  # Public suite: no credentials, no secrets. Runs on every PR.
+  blogspot:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    env:
+      ENV_FILE: .env.ci
+      # Non-secret configuration lives here in plain text, versioned with the code.
+      # Secrets come from repository settings, never from the repo.
+      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
+      BOLT_BASE_URL: https://bolt.playrealbrokerage.com
+      WORKERS: 2
+      RETRIES: 2
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2, 3, 4]
-        shardTotal: [4]
-        # opt-in to new configuration
-        useGlobalSetup: [false]
-        # opt-in to new configuration
-        useGlobalTeardown: [false]
-
+        shardIndex: [1, 2]
+        shardTotal: [2]
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report-${{ matrix.shardIndex }}
-        path: |
-          playwright-report/
-          test-results/
-          screenshots/
-          reports/
-        retention-days: 30
+      - uses: actions/checkout@v4
 
-  test-on-chromium:
-    timeout-minutes: 60
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Some images set NODE_ENV=production, which makes npm skip every
+      # devDependency — and every dependency in this project is one.
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Validate environment
+        run: npx tsx scripts/check-env.ts
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run blogspot suite
+        run: npx playwright test --project=blogspot --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        env:
+          CI: true
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blogspot-report-${{ matrix.shardIndex }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 14
+
+  # Authenticated suite: needs real credentials. Skipped on pull requests so
+  # contributors and forks don't fail on a missing secret.
+  bolt:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name != 'pull_request' }}
+    env:
+      ENV_FILE: .env.ci
+      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
+      BOLT_BASE_URL: https://bolt.playrealbrokerage.com
+      WORKERS: 1
+      RETRIES: 2
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps chromium
-    - name: Run Playwright tests on Chromium
-      run: npx playwright test --project=Chromium
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report-chromium
-        path: |
-          playwright-report/
-          test-results/
-          screenshots/
-          reports/
-        retention-days: 30 
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      # Credentials are injected from the secret store into an env var, then
+      # written to the fixture path the specs already read. Nothing is committed.
+      - name: Provide credentials
+        run: printf '%s' "$BOLT_LOGIN_JSON" > testdata/bolt/login.json
+        env:
+          BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
+
+      - name: Validate environment
+        run: npx tsx scripts/check-env.ts
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run authenticated suite
+        run: npx playwright test --project=bolt
+        env:
+          CI: true
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bolt-report
+          path: |
+            reports/
+            screenshots/
+          retention-days: 14
