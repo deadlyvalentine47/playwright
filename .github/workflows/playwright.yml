@@ -42,20 +42,30 @@ jobs:
       - name: Lint
         run: npm run lint
 
-  # Public suite: targets one public site, needs no credentials. Runs on PRs too,
-  # so it declares no environment and exactly one URL — its own.
+  # Public suite: targets one public site, needs no credentials. The URL comes
+  # from the selected GitHub Environment as a variable, same as bolt and sauce.
+  # Sharded across 2 runners because the site is slow and occasionally serves a
+  # challenge page, so a whole job's worth of tests is not lost to one bad load.
   blogspot:
     needs: typecheck
     timeout-minutes: 20
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    environment: ${{ inputs.target || 'qa' }}
     env:
       CI: true
-      APP_ENV: public
+      APP_ENV: ${{ inputs.target || 'qa' }}
       # A file that does not exist: in CI nothing is read from disk.
       ENV_FILE: .env.missing
-      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
-      WORKERS: 4
+      # from the selected GitHub Environment, same as bolt and sauce
+      BLOGSPOT_BASE_URL: ${{ vars.BLOGSPOT_BASE_URL }}
+      WORKERS: 2
       RETRIES: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
     steps:
       - uses: actions/checkout@v4
 
@@ -75,14 +85,14 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run blogspot suite
-        run: npx playwright test --project=blogspot
+      - name: Run blogspot suite (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: npx playwright test --project=blogspot --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: blogspot-report
+          name: blogspot-report-${{ matrix.shardIndex }}
           path: |
             reports/
             screenshots/
@@ -145,16 +155,17 @@ jobs:
             screenshots/
           retention-days: 14
 
-  # Public suite, own job so it fails independently. No credentials, so it runs
-  # on pull requests too. Same shape as blogspot: one URL, declared here as a
-  # variable rather than a secret because there is nothing to hide.
+  # Public suite, own job so it fails independently. The URL comes from the
+  # selected GitHub Environment as a variable — same pattern as bolt and blogspot.
   sauce:
     needs: typecheck
     timeout-minutes: 20
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    environment: ${{ inputs.target || 'qa' }}
     env:
       CI: true
-      APP_ENV: public
+      APP_ENV: ${{ inputs.target || 'qa' }}
       ENV_FILE: .env.missing
       SAUCE_DEMO_URL: ${{ vars.SAUCE_DEMO_URL }}
       WORKERS: 4
