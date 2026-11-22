@@ -24,6 +24,6 @@ export type CartPageModel = {
     commonTestData: CommonTestData
     firstname: string
     lastName: string
-    postalCode: Number
+    postalCode: number
     //whatever cart page fields needed
 }
