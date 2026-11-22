@@ -1,0 +1,9 @@
+{
+  "popupUrls": ["selenium.dev", "playwright.dev"],
+  "expectedTitles": {
+    "selenium.dev": "Selenium",
+    "playwright.dev": "Fast and reliable end-to-end testing for modern web apps | Playwright"
+  },
+  "expectedPopupCount": 2,
+  "singlePopupButton": "New Tab"
+}

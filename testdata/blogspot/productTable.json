@@ -1,0 +1,9 @@
+{
+  "rowsPerPage": 5,
+  "expectedHeaders": ["ID", "Name", "Price", "Select"],
+  "pricePattern": "^\\$\\d+\\.\\d{2}$",
+  "selection": {
+    "select": "Smartphone",
+    "leaveChecked": "Laptop"
+  }
+}

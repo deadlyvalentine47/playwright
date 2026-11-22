@@ -1,0 +1,15 @@
+[
+    {
+        "testName" : "Payments test",
+        "email" : "sahilagent",
+        "password" : "P@ssw0rd",
+        "toggle": false,
+        "amount": [
+            "50000",
+            "50000",
+            "50000",
+            "50000",
+            "50000"
+        ]
+    }
+]

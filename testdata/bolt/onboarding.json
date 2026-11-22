@@ -1,0 +1,14 @@
+{
+  "testName": "datePicker test",
+  "expectedOnboardingUrl": "onboarding/application-form",
+  "expectedProgress": "2/8",
+  "expectedNavLabels": ["Create Account", "Application Form", "Application Fee", "Join Boards"],
+  "dateOfBirth": {
+    "year": 1999,
+    "month": 0,
+    "day": 15
+  },
+  "expectedBirthDate": "01/15/1999",
+  "minimumMonthOptions": 12,
+  "minimumYearOptions": 50
+}

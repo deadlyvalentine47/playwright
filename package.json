@@ -1,0 +1,40 @@
+{
+  "name": "playwright-automation",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "cross-env ENV_FILE=.env playwright test",
+    "test:qa": "cross-env ENV_FILE=.env.qa playwright test",
+    "test:stage": "cross-env ENV_FILE=.env.stage playwright test",
+    "test:blogspot": "cross-env ENV_FILE=.env playwright test --project=blogspot",
+    "test:bolt": "cross-env ENV_FILE=.env playwright test --project=bolt",
+    "test:repeat": "cross-env ENV_FILE=.env playwright test --repeat-each=3",
+    "test:headed": "cross-env ENV_FILE=.env HEADLESS=false playwright test",
+    "test:debug": "cross-env ENV_FILE=.env playwright test --debug",
+    "report": "playwright show-report reports",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "verify": "npm run typecheck && npm run lint && npm test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Playwright end-to-end automation framework",
+  "devDependencies": {
+    "@eslint/css": "^0.10.0",
+    "@eslint/js": "^9.31.0",
+    "@eslint/json": "^0.13.1",
+    "@eslint/markdown": "^7.1.0",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6",
+    "cross-env": "^7.0.3",
+    "dotenv": "^17.2.0",
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
+    "playwright": "^1.65.1",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.73.0"
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "testName": "opens the calendar with a full month of days",
+    "action": "open",
+    "expectedMonthPattern": "^[A-Z][a-z]+ \\d{4}$",
+    "minimumDaysInMonth": 28
+  },
+  {
+    "testName": "advances to the next month",
+    "action": "nextMonth"
+  },
+  {
+    "testName": "selecting day 15 writes day 15 into the input",
+    "action": "selectDay",
+    "day": 15
+  },
+  {
+    "testName": "selecting day 3 writes day 3 into the input",
+    "action": "selectDay",
+    "day": 3
+  }
+]

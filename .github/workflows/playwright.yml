@@ -1,0 +1,118 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which GitHub Environment to run against
+        type: choice
+        options: [qa, stage, prod]
+        default: qa
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Public suite: targets one public site, needs no credentials. Runs on PRs too,
+  # so it declares no environment and exactly one URL — its own.
+  blogspot:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      APP_ENV: public
+      # A file that does not exist: in CI nothing is read from disk.
+      ENV_FILE: .env.missing
+      BLOGSPOT_BASE_URL: https://testautomationpractice.blogspot.com/
+      WORKERS: 4
+      RETRIES: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Some images set NODE_ENV=production, which makes npm skip every
+      # devDependency — and every dependency here is one.
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run blogspot suite
+        run: npx playwright test --project=blogspot
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blogspot-report
+          path: |
+            reports/
+            screenshots/
+          retention-days: 14
+
+  # Authenticated suite. The GitHub Environment named here is the single source
+  # of truth: it supplies BOLT_BASE_URL and the credentials. BLOGSPOT_BASE_URL is
+  # absent on purpose — this project never touches it.
+  bolt:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    environment: ${{ inputs.target || 'qa' }}
+    env:
+      CI: true
+      APP_ENV: ${{ inputs.target || 'qa' }}
+      ENV_FILE: .env.missing
+      # `vars || secrets` so moving a value between variable and secret does not
+      # need a workflow edit. GitHub does not fall back on its own: a missing
+      # secret resolves to an empty string, which is what broke this job before.
+      BOLT_BASE_URL: ${{ vars.BOLT_BASE_URL || secrets.BOLT_BASE_URL }}
+      BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
+      BOLT_AUTH_STATE: .auth/bolt.json
+      WORKERS: 1
+      RETRIES: 2
+      # Turn on when every hostname contains its environment name (api.qa...,
+      # api.stage...). Catches a stage build running QA config.
+      URL_MUST_CONTAIN_ENV: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Validate environment
+        run: npx tsx scripts/check-env.ts bolt
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Write credentials
+        run: printf '%s' "$BOLT_LOGIN_JSON" > testdata/bolt/login.json
+
+      - name: Run authenticated suite
+        run: npx playwright test --project=bolt
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bolt-report-${{ inputs.target || 'qa' }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 14

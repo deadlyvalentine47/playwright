@@ -1,0 +1,20 @@
+.cursorindexingignore
+.specstory/
+Chat history.md
+node_modules/
+reports/
+screenshots/
+
+# Local and per-environment files. Nothing here is read by CI: each GitHub
+# Environment (qa / stage / prod) supplies the values.
+.env
+.env.local
+.env.qa
+.env.stage
+.env.*.local
+
+# Playwright auth state
+.auth/
+
+# NOTE: package-lock.json is committed on purpose. `npm ci` and the setup-node
+# cache both require it; ignoring it means CI cannot install dependencies at all.
