@@ -20,8 +20,8 @@ export class SauceLoginPage {
     }
 
     async login (testcase : SauceLoginModel) {
-        await this.userName.pressSequentially(testcase.userName, { delay: 100 });
-        await this.password.fill(testcase.password)
+        await this.userName.pressSequentially(testcase.loginCredentials.userName, { delay: 100 });
+        await this.password.fill(testcase.loginCredentials.password)
     
         await this.loginButton.click()
 

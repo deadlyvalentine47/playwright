@@ -10,19 +10,19 @@ test.describe('Sauce Login Tests', () => {
 
     for(const testcase of testCases) {
         
-        test(testcase.testName, async ({page}) => {
+        test(testcase.commonTestData.testName, async ({page}) => {
             
             const loginPage = new SauceLoginPage(page)
 
             await loginPage.navigateToSauceLoginpage()
             await loginPage.login(testcase)
 
-           if (testcase.expectedUrl) {
-            await expect(page).toHaveURL(new RegExp(testcase.expectedUrl))
+           if (testcase.validations.expectedUrl) {
+            await expect(page).toHaveURL(new RegExp(testcase.validations.expectedUrl))
            }
 
-           if (testcase.expectedError) {
-            await expect(page.locator('[data-test="error"]')).toContainText(testcase.expectedError)
+           if (testcase.validations.expectedError) {
+            await expect(page.locator('[data-test="error"]')).toContainText(testcase.validations.expectedError)
            }
 
         })

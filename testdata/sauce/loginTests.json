@@ -1,23 +1,44 @@
 [
     {
-        "testName": "standard user reaches inventory",
-        "userName": "standard_user",
-        "password": "secret_sauce",
-        "expectedUrl": "/inventory",
-        "expectedError": null
+        "commonTestData": {
+            "testName": "standard user reaches inventory",
+            "testdescription": "valid credentials land on the inventory page"
+        },
+        "loginCredentials": {
+            "userName": "standard_user",
+            "password": "secret_sauce"
+        },
+        "validations": {
+            "expectedUrl": "/inventory",
+            "expectedError": null
+        }
     },
     {
-        "testName": "locked out user sees a lock message",
-        "userName": "locked_out_user",
-        "password": "secret_sauce",
-        "expectedUrl": null,
-        "expectedError": "Sorry, this user has been locked out"
+        "commonTestData": {
+            "testName": "locked out user sees a lock message",
+            "testdescription": "a locked account is rejected with a specific message"
+        },
+        "loginCredentials": {
+            "userName": "locked_out_user",
+            "password": "secret_sauce"
+        },
+        "validations": {
+            "expectedUrl": null,
+            "expectedError": "Sorry, this user has been locked out"
+        }
     },
     {
-        "testName": "wrong password is rejected",
-        "userName": "standard_user",
-        "password": "not-the-password",
-        "expectedUrl": null,
-        "expectedError": "Username and password do not match"
+        "commonTestData": {
+            "testName": "wrong password is rejected",
+            "testdescription": "a bad password shows the mismatch error"
+        },
+        "loginCredentials": {
+            "userName": "standard_user",
+            "password": "not-the-password"
+        },
+        "validations": {
+            "expectedUrl": null,
+            "expectedError": "Username and password do not match"
+        }
     }
 ]
