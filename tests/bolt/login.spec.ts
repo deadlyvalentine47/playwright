@@ -10,6 +10,10 @@ type BoltCredentials = {
 
 const credentials = getTestData<BoltCredentials>('testdata/bolt/login.json');
 
+// The bolt project inherits the logged-in session from bolt-auth. These specs are
+// about the login form itself, so they must start logged OUT.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Bolt — login', () => {
   for (const testcase of credentials) {
     test(`${testcase.testName} — valid credentials reach onboarding`, async ({ page }) => {

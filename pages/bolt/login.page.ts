@@ -1,6 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
 import { getTestData } from '../../utils/dataProvider.js';
-import { env } from '../../utils/env.js';
 
 export type BoltCredentials = {
   testName: string;
@@ -22,9 +21,7 @@ export class BoltLoginPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(new URL('/', env.boltBaseUrl).toString(), {
-      waitUntil: 'networkidle',
-    });
+    await this.page.goto('/', { waitUntil: 'networkidle' });
     await this.usernameInput.waitFor({ state: 'visible' });
   }
 

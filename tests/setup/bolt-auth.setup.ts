@@ -2,10 +2,9 @@ import { expect, test } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { BoltLoginPage } from '../../pages/bolt/login.page.js';
-import { env } from '../../utils/env.js';
 
 test('authenticate to Bolt', async ({ page }) => {
-  const authFile = path.resolve(env.boltAuthState);
+  const authFile = path.resolve(process.env.BOLT_AUTH_STATE ?? '.auth/bolt.json');
   fs.mkdirSync(path.dirname(authFile), { recursive: true });
 
   const login = new BoltLoginPage(page);

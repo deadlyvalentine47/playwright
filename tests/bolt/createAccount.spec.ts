@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { BoltOnboardingPage } from '../../pages/bolt/onboarding.page.js';
 import { getTestData } from '../../utils/dataProvider.js';
-import { env } from '../../utils/env.js';
 
 type Onboarding = {
   testName: string;
@@ -11,8 +10,6 @@ type Onboarding = {
 };
 
 const cases = getTestData<Onboarding>('testdata/bolt/onboarding.json');
-
-test.use({ storageState: env.boltAuthState });
 
 test.describe('Bolt — onboarding', () => {
   for (const data of cases) {
