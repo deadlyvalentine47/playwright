@@ -1,9 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { BoltLoginPage } from '../../pages/bolt/login.page.js';
-import { testData } from '../../utils/testData.js';
+import { getTestData } from '../../utils/dataProvider.js';
 
-const credentials = testData.boltLogin();
-const first = credentials[0]!;
+type BoltCredentials = {
+  testName: string;
+  email: string;
+  password: string;
+};
+
+const credentials = getTestData<BoltCredentials>('testdata/bolt/login.json');
 
 test.describe('Bolt — login', () => {
   for (const testcase of credentials) {
@@ -17,15 +22,15 @@ test.describe('Bolt — login', () => {
       expect(page.url()).toMatch(/onboarding|dashboard/);
       await expect(page.locator('body')).not.toBeEmpty();
     });
+
+    test(`rejects a wrong password for ${testcase.email}`, async ({ page }) => {
+      const login = new BoltLoginPage(page);
+
+      await login.goto();
+      await login.loginAs({ email: testcase.email, password: 'definitely-not-the-password' });
+      await login.waitForRejected();
+
+      expect(page.url()).toMatch(/\/login/);
+    });
   }
-
-  test('rejects a wrong password', async ({ page }) => {
-    const login = new BoltLoginPage(page);
-
-    await login.goto();
-    await login.loginAs({ email: first.email, password: 'definitely-not-the-password' });
-    await login.waitForRejected();
-
-    expect(page.url()).toMatch(/\/login/);
-  });
 });

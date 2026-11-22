@@ -20,6 +20,10 @@ export class DatePickerPage extends BasePage {
   }
 
   async open(): Promise<void> {
+    // jQuery UI binds the datepicker on window load, which lands after
+    // domcontentloaded. Clicking before that is a no-op: the click succeeds, no
+    // calendar ever appears, and the failure surfaces as an unhelpful timeout.
+    await this.page.waitForLoadState('load');
     await this.input.click();
     await this.calendar.waitFor({ state: 'visible' });
   }

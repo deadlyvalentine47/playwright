@@ -1,16 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { ProductTablePage, type ProductRow } from '../../pages/blogspot/productTable.page.js';
-import { testData } from '../../utils/testData.js';
+import { getTestData } from '../../utils/dataProvider.js';
 
-const data = testData.productTable();
-const pricePattern = new RegExp(data.pricePattern);
+type ProductTable = {
+  rowsPerPage: number;
+  expectedHeaders: string[];
+  pricePattern: string;
+  selection: { select: string; leaveChecked: string };
+};
 
-/**
- * These specs assert on the structure and invariants of the table, not on the
- * products it happens to contain. The contents belong to the site; the schema,
- * the row count, the ID sequencing and the pagination behaviour are what we
- * actually depend on. Renaming a product must not fail them.
- */
+const tables = getTestData<ProductTable>('testdata/blogspot/productTable.json');
+
 test.describe('Product table', () => {
   test.beforeEach(async ({ page }) => {
     const ui = new ProductTablePage(page);
@@ -18,72 +18,70 @@ test.describe('Product table', () => {
     await expect(ui.table).toBeVisible();
   });
 
-  test('renders the expected columns and row count', async ({ page }) => {
-    const ui = new ProductTablePage(page);
+  for (const data of tables) {
+    const pricePattern = new RegExp(data.pricePattern);
 
-    expect(await ui.headerLabels()).toEqual(data.expectedHeaders);
-    expect(await ui.columnCount()).toBe(data.expectedHeaders.length);
-    expect(await ui.rowCount()).toBe(data.rowsPerPage);
-  });
+    test('renders the expected columns and row count', async ({ page }) => {
+      const ui = new ProductTablePage(page);
 
-  test('every row is well formed', async ({ page }) => {
-    const ui = new ProductTablePage(page);
-    const rows = await ui.readRows();
+      expect(await ui.headerLabels()).toEqual(data.expectedHeaders);
+      expect(await ui.columnCount()).toBe(data.expectedHeaders.length);
+      expect(await ui.rowCount()).toBe(data.rowsPerPage);
+    });
 
-    expect(rows).toHaveLength(data.rowsPerPage);
-
-    for (const row of rows) {
-      expect(row.id, `row id should be a positive number: ${JSON.stringify(row)}`).toBeGreaterThan(0);
-      expect(row.name, 'row name should not be blank').not.toBe('');
-      expect(row.price, `price should match ${data.pricePattern}`).toMatch(pricePattern);
-    }
-  });
-
-  test('row ids are unique on this page', async ({ page }) => {
-    const ui = new ProductTablePage(page);
-    const ids = (await ui.readRows()).map((r: ProductRow) => r.id);
-
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  test('selecting one row checks only that row', async ({ page }) => {
-    const ui = new ProductTablePage(page);
-    const names = await ui.productNames();
-
-    // a product we know exists, because we just read it from the page
-    const target = names[0]!;
-    const other = names[1]!;
-
-    await ui.selectRow(target);
-
-    await expect(ui.rowByName(target).locator('input')).toBeChecked();
-    await expect(ui.rowByName(other).locator('input')).not.toBeChecked();
-  });
-
-  test('pagination swaps pages without repeating a product', async ({ page }) => {
-    const ui = new ProductTablePage(page);
-    const pages = await ui.pageNumbers();
-
-    expect(pages.length).toBeGreaterThan(1);
-
-    const seen = new Set<string>();
-    const idsSeen: number[] = [];
-
-    for (const pageNumber of pages) {
-      await ui.goToPage(pageNumber);
-      await expect(ui.pageLink(pageNumber)).toHaveClass(/\bactive\b/);
-
+    test('every row is well formed', async ({ page }) => {
+      const ui = new ProductTablePage(page);
       const rows = await ui.readRows();
+
       expect(rows).toHaveLength(data.rowsPerPage);
 
       for (const row of rows) {
-        expect(seen.has(row.name), `"${row.name}" appears on more than one page`).toBe(false);
-        seen.add(row.name);
-        idsSeen.push(row.id);
+        expect(row.id, `id should be positive: ${JSON.stringify(row)}`).toBeGreaterThan(0);
+        expect(row.name, 'name should not be blank').not.toBe('');
+        expect(row.price, `price should match ${data.pricePattern}`).toMatch(pricePattern);
       }
-    }
+    });
 
-    // ids should be globally unique and ascending across the whole table
-    expect(new Set(idsSeen).size).toBe(idsSeen.length);
-  });
+    test('row ids are unique on this page', async ({ page }) => {
+      const ui = new ProductTablePage(page);
+      const ids = (await ui.readRows()).map((r: ProductRow) => r.id);
+
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    test('selecting one row checks only that row', async ({ page }) => {
+      const ui = new ProductTablePage(page);
+
+      await ui.selectRow(data.selection.select);
+
+      await expect(ui.rowByName(data.selection.select).locator('input')).toBeChecked();
+      expect(await ui.rowByName(data.selection.leaveChecked).locator('input').isChecked()).toBe(false);
+    });
+
+    test('pagination covers every page without repeating a product', async ({ page }) => {
+      const ui = new ProductTablePage(page);
+      const pages = await ui.pageNumbers();
+
+      expect(pages.length).toBeGreaterThan(1);
+
+      const names = new Set<string>();
+      const ids: number[] = [];
+
+      for (const pageNumber of pages) {
+        await ui.goToPage(pageNumber);
+        await expect(ui.pageLink(pageNumber)).toHaveClass(/\bactive\b/);
+
+        const rows = await ui.readRows();
+        expect(rows).toHaveLength(data.rowsPerPage);
+
+        for (const row of rows) {
+          expect(names.has(row.name), `"${row.name}" appears on more than one page`).toBe(false);
+          names.add(row.name);
+          ids.push(row.id);
+        }
+      }
+
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+  }
 });

@@ -1,8 +1,18 @@
 import { expect, test } from '@playwright/test';
 import { DialogPage } from '../../pages/blogspot/dialog.page.js';
-import { testData } from '../../utils/testData.js';
+import { getTestData } from '../../utils/dataProvider.js';
 
-const cases = testData.dialogs();
+type DialogCase = {
+  testName: string;
+  trigger: 'simple' | 'confirmation' | 'prompt';
+  accept?: boolean;
+  promptText?: string;
+  expectedType: 'alert' | 'confirm' | 'prompt';
+  expectedMessage: string;
+  expectedResult: string | null;
+};
+
+const cases = getTestData<DialogCase>('testdata/blogspot/dialog.json');
 
 test.describe('Dialogs', () => {
   test.beforeEach(async ({ page }) => {

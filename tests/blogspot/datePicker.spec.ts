@@ -1,8 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { DatePickerPage } from '../../pages/blogspot/datePicker.page.js';
-import { testData } from '../../utils/testData.js';
+import { getTestData } from '../../utils/dataProvider.js';
 
-const cases = testData.datePicker();
+type DatePickerCase = {
+  testName: string;
+  action: 'open' | 'nextMonth' | 'selectDay';
+  day?: number;
+  expectedMonthPattern?: string;
+  minimumDaysInMonth?: number;
+};
+
+const cases = getTestData<DatePickerCase>('testdata/blogspot/datePicker.json');
 
 test.describe('Date picker', () => {
   test.beforeEach(async ({ page }) => {
@@ -28,8 +36,8 @@ test.describe('Date picker', () => {
         await ui.selectDay(day);
         await expect(ui.calendar).toBeHidden();
 
-        // the expectation is derived from the input, not hardcoded a second time:
-        // the field is MM/DD/YYYY, so the middle component must be the day clicked
+        // derive the expectation from the field instead of hardcoding the day twice:
+        // the value is MM/DD/YYYY, so the middle component must be the day clicked
         const value = await ui.value();
         expect(value, 'value should look like MM/DD/YYYY').toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
 

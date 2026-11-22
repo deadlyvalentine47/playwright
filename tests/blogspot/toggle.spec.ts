@@ -1,8 +1,20 @@
 import { expect, test } from '@playwright/test';
 import { ToggleButtonPage } from '../../pages/blogspot/toggle.page.js';
-import { testData } from '../../utils/testData.js';
+import { getTestData } from '../../utils/dataProvider.js';
 
-const scenarios = testData.toggleScenarios();
+type ToggleState = {
+  label: string;
+  expectedText: string;
+  expectedName: string;
+  expectedClass: string;
+};
+
+type ToggleScenario = {
+  testName: string;
+  expectedStates: ToggleState[];
+};
+
+const scenarios = getTestData<ToggleScenario>('testdata/blogspot/toggle.json');
 
 test.describe('Toggle button', () => {
   for (const scenario of scenarios) {
@@ -13,7 +25,7 @@ test.describe('Toggle button', () => {
       for (let i = 0; i < scenario.expectedStates.length; i += 1) {
         const state = scenario.expectedStates[i]!;
 
-        // the click happens between assertions: the sequence IS the assertion
+        // the click happens between assertions: the sequence is the assertion
         if (i > 0) {
           await ui.toggle();
         }
