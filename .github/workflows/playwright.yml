@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --include=dev
 
+      - name: Validate environment
+        run: npx tsx scripts/check-env.ts blogspot
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
@@ -94,6 +97,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --include=dev
+
+      - name: Validate environment
+        run: npx tsx scripts/check-env.ts bolt
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

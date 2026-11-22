@@ -21,33 +21,12 @@ const BOLT_BASE_URL = process.env.BOLT_BASE_URL ?? 'https://bolt.playrealbrokera
 const BOLT_AUTH_STATE = process.env.BOLT_AUTH_STATE ?? '.auth/bolt.json';
 
 /**
- * A silent fallback in CI hides a misconfigured pipeline, so fail instead — but
- * only for the project being run. Each CI job declares the variables for its own
- * suite, so a blogspot-only job must not be failed for a missing BOLT_BASE_URL.
- *
- * `--project=` is passed on the command line, so read it from argv.
+ * No "fail if unset in CI" check here on purpose. This module is re-evaluated
+ * inside every worker process, where argv and the selected project are not
+ * reliably visible — a project-scoped guard in this file misfires and reports
+ * the wrong variable. scripts/check-env.ts is the pipeline step for that, run
+ * once before the suite.
  */
-if (process.env.CI) {
-  const selected = process.argv
-    .filter((arg) => arg.startsWith('--project='))
-    .flatMap((arg) => arg.replace('--project=', '').split(','));
-
-  const needs: Record<string, string[]> = {
-    blogspot: ['BLOGSPOT_BASE_URL'],
-    bolt: ['BOLT_BASE_URL'],
-    'bolt-auth': ['BOLT_BASE_URL'],
-  };
-
-  // No --project given means every project runs, so every variable is required.
-  const required = selected.length > 0 ? selected.flatMap((p) => needs[p] ?? []) : Object.values(needs).flat();
-
-  const missing = required.filter((name) => !process.env[name]);
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing in CI: ${missing.join(', ')} — set them on the selected GitHub Environment`,
-    );
-  }
-}
 
 export default defineConfig({
   testDir: './tests',
