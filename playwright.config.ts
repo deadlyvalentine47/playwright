@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import path from 'node:path';
+import { config as loadEnv } from 'dotenv';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -7,16 +8,39 @@ import { defineConfig, devices } from '@playwright/test';
  * `??` gives every value a concrete type, so nothing downstream writes `!`.
  * `baseURL` and `storageState` live on the project, which is why page objects
  * navigate with relative paths and specs never import an env module.
+ *
+ * ENV_FILE selects which file to load, so `ENV_FILE=.env.qa npm test` works.
+ * `import 'dotenv/config'` cannot do this — it always reads `.env`.
  */
+export const ENV_FILE = process.env.ENV_FILE ?? '.env';
+loadEnv({ path: path.resolve(ENV_FILE), quiet: true });
 
 const BLOGSPOT_BASE_URL =
   process.env.BLOGSPOT_BASE_URL ?? 'https://testautomationpractice.blogspot.com/';
 const BOLT_BASE_URL = process.env.BOLT_BASE_URL ?? 'https://bolt.playrealbrokerage.com';
 const BOLT_AUTH_STATE = process.env.BOLT_AUTH_STATE ?? '.auth/bolt.json';
 
-// A silent fallback in CI hides a misconfigured pipeline. Fail instead.
+/**
+ * A silent fallback in CI hides a misconfigured pipeline, so fail instead — but
+ * only for the project being run. Each CI job declares the variables for its own
+ * suite, so a blogspot-only job must not be failed for a missing BOLT_BASE_URL.
+ *
+ * `--project=` is passed on the command line, so read it from argv.
+ */
 if (process.env.CI) {
-  const required = ['BLOGSPOT_BASE_URL', 'BOLT_BASE_URL'];
+  const selected = process.argv
+    .filter((arg) => arg.startsWith('--project='))
+    .flatMap((arg) => arg.replace('--project=', '').split(','));
+
+  const needs: Record<string, string[]> = {
+    blogspot: ['BLOGSPOT_BASE_URL'],
+    bolt: ['BOLT_BASE_URL'],
+    'bolt-auth': ['BOLT_BASE_URL'],
+  };
+
+  // No --project given means every project runs, so every variable is required.
+  const required = selected.length > 0 ? selected.flatMap((p) => needs[p] ?? []) : Object.values(needs).flat();
+
   const missing = required.filter((name) => !process.env[name]);
   if (missing.length > 0) {
     throw new Error(
