@@ -19,6 +19,7 @@ const BLOGSPOT_BASE_URL =
   process.env.BLOGSPOT_BASE_URL ?? 'https://testautomationpractice.blogspot.com/';
 const BOLT_BASE_URL = process.env.BOLT_BASE_URL ?? 'https://bolt.playrealbrokerage.com';
 const BOLT_AUTH_STATE = process.env.BOLT_AUTH_STATE ?? '.auth/bolt.json';
+const SAUCE_DEMO_URL = process.env.SAUCE_DEMO_URL;
 
 /**
  * No "fail if unset in CI" check here on purpose. This module is re-evaluated
@@ -79,6 +80,14 @@ export default defineConfig({
       fullyParallel: false,
       workers: 1,
     },
+    {
+      name: 'sauce',
+      testDir: './tests/sauce',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: SAUCE_DEMO_URL,
+      },
+    }
   ],
   outputDir: 'screenshots',
   /**

@@ -1,0 +1,23 @@
+[
+    {
+        "testName": "standard user reaches inventory",
+        "userName": "standard_user",
+        "password": "secret_sauce",
+        "expectedUrl": "/inventory",
+        "expectedError": null
+    },
+    {
+        "testName": "locked out user sees a lock message",
+        "userName": "locked_out_user",
+        "password": "secret_sauce",
+        "expectedUrl": null,
+        "expectedError": "Sorry, this user has been locked out"
+    },
+    {
+        "testName": "wrong password is rejected",
+        "userName": "standard_user",
+        "password": "not-the-password",
+        "expectedUrl": null,
+        "expectedError": "Username and password do not match"
+    }
+]
