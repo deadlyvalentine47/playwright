@@ -19,7 +19,8 @@ const BLOGSPOT_BASE_URL =
   process.env.BLOGSPOT_BASE_URL ?? 'https://testautomationpractice.blogspot.com/';
 const BOLT_BASE_URL = process.env.BOLT_BASE_URL ?? 'https://bolt.playrealbrokerage.com';
 const BOLT_AUTH_STATE = process.env.BOLT_AUTH_STATE ?? '.auth/bolt.json';
-const SAUCE_DEMO_URL = process.env.SAUCE_DEMO_URL;
+// same treatment as the others: a `??` default means no `!` at the call site
+const SAUCE_DEMO_URL = process.env.SAUCE_DEMO_URL ?? 'https://www.saucedemo.com';
 
 /**
  * No "fail if unset in CI" check here on purpose. This module is re-evaluated

@@ -21,6 +21,7 @@ const NEEDS: Record<string, string[]> = {
   blogspot: ['BLOGSPOT_BASE_URL'],
   bolt: ['BOLT_BASE_URL'],
   'bolt-auth': ['BOLT_BASE_URL'],
+  sauce: ['SAUCE_DEMO_URL'],
 };
 
 const requested = process.argv.slice(2).filter(Boolean);

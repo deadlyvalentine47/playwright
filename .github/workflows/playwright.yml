@@ -19,9 +19,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Fails the build on a type error. `playwright test` transpiles and ignores
+  # types, so without this a nested type can disagree with flat JSON and every
+  # test still passes. Runs once, no browser needed.
+  typecheck:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
   # Public suite: targets one public site, needs no credentials. Runs on PRs too,
   # so it declares no environment and exactly one URL — its own.
   blogspot:
+    needs: typecheck
     timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
@@ -65,9 +89,11 @@ jobs:
           retention-days: 14
 
   # Authenticated suite. The GitHub Environment named here is the single source
-  # of truth: it supplies BOLT_BASE_URL and the credentials. BLOGSPOT_BASE_URL is
-  # absent on purpose — this project never touches it.
+  # of truth: it supplies BOLT_BASE_URL (a variable — it is not a secret) and the
+  # credentials (a secret). BLOGSPOT_BASE_URL is absent on purpose — this project
+  # never touches it.
   bolt:
+    needs: typecheck
     timeout-minutes: 30
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
@@ -76,10 +102,9 @@ jobs:
       CI: true
       APP_ENV: ${{ inputs.target || 'qa' }}
       ENV_FILE: .env.missing
-      # `vars || secrets` so moving a value between variable and secret does not
-      # need a workflow edit. GitHub does not fall back on its own: a missing
-      # secret resolves to an empty string, which is what broke this job before.
-      BOLT_BASE_URL: ${{ vars.BOLT_BASE_URL || secrets.BOLT_BASE_URL }}
+      # URLs are variables: a public host is not a secret, and variables are
+      # readable in the UI so nobody has to guess what an environment points at.
+      BOLT_BASE_URL: ${{ vars.BOLT_BASE_URL }}
       BOLT_LOGIN_JSON: ${{ secrets.BOLT_LOGIN_JSON }}
       BOLT_AUTH_STATE: .auth/bolt.json
       WORKERS: 1
@@ -115,6 +140,50 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bolt-report-${{ inputs.target || 'qa' }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 14
+
+  # Public suite, own job so it fails independently. No credentials, so it runs
+  # on pull requests too. Same shape as blogspot: one URL, declared here as a
+  # variable rather than a secret because there is nothing to hide.
+  sauce:
+    needs: typecheck
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      APP_ENV: public
+      ENV_FILE: .env.missing
+      SAUCE_DEMO_URL: ${{ vars.SAUCE_DEMO_URL }}
+      WORKERS: 4
+      RETRIES: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Validate environment
+        run: npx tsx scripts/check-env.ts sauce
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run sauce suite
+        run: npx playwright test --project=sauce
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sauce-report
           path: |
             reports/
             screenshots/
