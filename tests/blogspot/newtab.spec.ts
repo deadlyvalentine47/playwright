@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { PopupPage } from '../../pages/blogspot/popup.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 
-const data = fixtures.popups();
+const data = testData.popups();
 
 test.describe('Popups and new tabs', () => {
   test.beforeEach(async ({ page }) => {

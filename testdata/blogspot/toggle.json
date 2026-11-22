@@ -1,20 +1,19 @@
 [
   {
-    "label": "initial",
-    "expectedText": "START",
-    "expectedName": "start",
-    "expectedClass": "start"
+    "testName": "full cycle START -> STOP -> START",
+    "expectedStates": [
+      { "label": "initial", "expectedText": "START", "expectedName": "start", "expectedClass": "start" },
+      { "label": "after one click", "expectedText": "STOP", "expectedName": "stop", "expectedClass": "stop" },
+      { "label": "after two clicks", "expectedText": "START", "expectedName": "start", "expectedClass": "start" }
+    ]
   },
   {
-    "label": "after first click",
-    "expectedText": "STOP",
-    "expectedName": "stop",
-    "expectedClass": "stop"
-  },
-  {
-    "label": "after second click",
-    "expectedText": "START",
-    "expectedName": "start",
-    "expectedClass": "start"
+    "testName": "three clicks end on STOP",
+    "expectedStates": [
+      { "label": "initial", "expectedText": "START", "expectedName": "start", "expectedClass": "start" },
+      { "label": "after one click", "expectedText": "STOP", "expectedName": "stop", "expectedClass": "stop" },
+      { "label": "after two clicks", "expectedText": "START", "expectedName": "start", "expectedClass": "start" },
+      { "label": "after three clicks", "expectedText": "STOP", "expectedName": "stop", "expectedClass": "stop" }
+    ]
   }
 ]

@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { DatePickerPage } from '../../pages/blogspot/datePicker.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 
-const cases = fixtures.datePicker();
+const cases = testData.datePicker();
 
 test.describe('Date picker', () => {
   test.beforeEach(async ({ page }) => {
@@ -23,10 +23,21 @@ test.describe('Date picker', () => {
       }
 
       if (testcase.action === 'selectDay') {
-        await ui.selectDay(testcase.day!);
+        const day = testcase.day!;
 
+        await ui.selectDay(day);
         await expect(ui.calendar).toBeHidden();
-        expect(await ui.value()).toMatch(new RegExp(testcase.expectedValuePattern!));
+
+        // the expectation is derived from the input, not hardcoded a second time:
+        // the field is MM/DD/YYYY, so the middle component must be the day clicked
+        const value = await ui.value();
+        expect(value, 'value should look like MM/DD/YYYY').toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+
+        const [month, valueDay, year] = value.split('/');
+        expect(Number(valueDay), `clicked ${day}, expected ${day} to be written`).toBe(day);
+        expect(Number(month)).toBeGreaterThanOrEqual(1);
+        expect(Number(month)).toBeLessThanOrEqual(12);
+        expect(Number(year)).toBeGreaterThan(1900);
         return;
       }
 

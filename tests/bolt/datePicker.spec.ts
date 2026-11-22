@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { BoltOnboardingPage } from '../../pages/bolt/onboarding.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 import { env } from '../../utils/env.js';
 
-const data = fixtures.onboarding();
+const data = testData.onboarding();
 
 test.use({ storageState: env.boltAuthState });
 

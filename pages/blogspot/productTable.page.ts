@@ -1,6 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 import { BasePage } from './base.page.js';
 
+export type ProductRow = {
+  id: number;
+  name: string;
+  price: string;
+};
+
 export class ProductTablePage extends BasePage {
   readonly table: Locator;
   readonly headers: Locator;
@@ -31,9 +37,38 @@ export class ProductTablePage extends BasePage {
     return this.rows.count();
   }
 
-  async productsOnPage(): Promise<string[]> {
-    const names = await this.rows.locator('td:nth-child(2)').allTextContents();
-    return names.map((n) => n.trim());
+  async headerLabels(): Promise<string[]> {
+    const labels = await this.headers.allTextContents();
+    return labels.map((l) => l.trim());
+  }
+
+  /**
+   * Reads every row from the DOM rather than comparing against a stored copy.
+   * The table's contents belong to the site, so the specs assert on the shape of
+   * this data, not on specific products.
+   */
+  async readRows(): Promise<ProductRow[]> {
+    return this.rows.evaluateAll((trs) =>
+      trs.map((tr) => {
+        const cells = Array.from(tr.querySelectorAll('td'));
+        return {
+          id: Number(cells[0]?.textContent?.trim() ?? ''),
+          name: cells[1]?.textContent?.trim() ?? '',
+          price: cells[2]?.textContent?.trim() ?? '',
+        };
+      }),
+    );
+  }
+
+  async productNames(): Promise<string[]> {
+    const rows = await this.readRows();
+    return rows.map((r) => r.name);
+  }
+
+  async pageNumbers(): Promise<number[]> {
+    return this.pagination.evaluateAll((links) =>
+      links.map((a) => Number(a.textContent?.trim() ?? '')),
+    );
   }
 
   async selectRow(name: string): Promise<void> {

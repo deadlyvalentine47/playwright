@@ -2,9 +2,9 @@ import { expect, test } from '@playwright/test';
 import { HeaderComponent } from '../../components/header.component.js';
 import { NavigationComponent } from '../../components/navigation.component.js';
 import { BasePage } from '../../pages/blogspot/base.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 
-const data = fixtures.siteChrome();
+const data = testData.siteChrome();
 
 test.describe('Site chrome', () => {
   for (const target of data.pages) {

@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { DialogPage } from '../../pages/blogspot/dialog.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 
-const cases = fixtures.dialogs();
+const cases = testData.dialogs();
 
 test.describe('Dialogs', () => {
   test.beforeEach(async ({ page }) => {

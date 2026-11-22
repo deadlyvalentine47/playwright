@@ -1,27 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { ToggleButtonPage } from '../../pages/blogspot/toggle.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 
-const states = fixtures.toggle();
+const scenarios = testData.toggleScenarios();
 
 test.describe('Toggle button', () => {
-  test.beforeEach(async ({ page }) => {
-    await new ToggleButtonPage(page).goto();
-  });
+  for (const scenario of scenarios) {
+    test(scenario.testName, async ({ page }) => {
+      const ui = new ToggleButtonPage(page);
+      await ui.goto();
 
-  test('walks the full START -> STOP -> START cycle', async ({ page }) => {
-    const ui = new ToggleButtonPage(page);
+      for (let i = 0; i < scenario.expectedStates.length; i += 1) {
+        const state = scenario.expectedStates[i]!;
 
-    for (let i = 0; i < states.length; i += 1) {
-      const state = states[i]!;
+        // the click happens between assertions: the sequence IS the assertion
+        if (i > 0) {
+          await ui.toggle();
+        }
 
-      if (i > 0) {
-        await ui.toggle();
+        await test.step(state.label, async () => {
+          await expect(ui.button).toHaveText(state.expectedText);
+          await expect(ui.button).toHaveAttribute('name', state.expectedName);
+          await expect(ui.button).toHaveClass(new RegExp(`\\b${state.expectedClass}\\b`));
+        });
       }
-
-      await expect(ui.button, state.label).toHaveText(state.expectedText);
-      await expect(ui.button, state.label).toHaveAttribute('name', state.expectedName);
-      await expect(ui.button, state.label).toHaveClass(new RegExp(`\\b${state.expectedClass}\\b`));
-    }
-  });
+    });
+  }
 });

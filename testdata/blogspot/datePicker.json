@@ -7,13 +7,16 @@
   },
   {
     "testName": "advances to the next month",
-    "action": "nextMonth",
-    "expectMonthChange": true
+    "action": "nextMonth"
   },
   {
-    "testName": "selecting a day writes a date into the input",
+    "testName": "selecting day 15 writes day 15 into the input",
     "action": "selectDay",
-    "day": 15,
-    "expectedValuePattern": "^\\d{2}\\/15\\/\\d{4}$"
+    "day": 15
+  },
+  {
+    "testName": "selecting day 3 writes day 3 into the input",
+    "action": "selectDay",
+    "day": 3
   }
 ]

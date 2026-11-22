@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { BoltLoginPage } from '../../pages/bolt/login.page.js';
-import { fixtures } from '../../utils/fixtures.js';
+import { testData } from '../../utils/testData.js';
 
-const credentials = fixtures.boltLogin();
+const credentials = testData.boltLogin();
 const first = credentials[0]!;
 
 test.describe('Bolt — login', () => {
