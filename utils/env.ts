@@ -114,19 +114,3 @@ export class EnvironmentMismatchError extends Error {
     this.name = 'EnvironmentMismatchError';
   }
 }
-
-/**
- * Fails when a run is pointed at the wrong environment. Called from global
- * setup for the projects that are actually selected.
- */
-export function assertEnvironmentMatches(project: string): void {
-  if (!env.urlMustContainEnv) {
-    return;
-  }
-  const variable = project === 'blogspot' ? 'BLOGSPOT_BASE_URL' : 'BOLT_BASE_URL';
-  const url = baseUrlFor(project);
-
-  if (!url.toLowerCase().includes(env.name.toLowerCase())) {
-    throw new EnvironmentMismatchError(variable, url, env.name);
-  }
-}
