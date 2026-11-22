@@ -1,0 +1,15 @@
+[
+    {
+        "commonTestData": {
+            "testName": "standard user cart test",
+            "testdescription": "Adding item to cart as a standard user and performing checkout"
+        },
+        "loginCredentials": {
+            "userName": "standard_user",
+            "password": "secret_sauce"
+        },
+        "firstname" : "testFirstName",
+        "lastName" : "testLastname",
+        "postalCode" : 161616
+    }
+]

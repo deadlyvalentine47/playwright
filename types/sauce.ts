@@ -19,8 +19,11 @@ export type SauceLoginModel = {
     validations: Validations
 }
 
-export type CartPaageModel = {
+export type CartPageModel = {
     loginCredentials: LoginCredentials;
     commonTestData: CommonTestData
+    firstname: string
+    lastName: string
+    postalCode: Number
     //whatever cart page fields needed
 }

@@ -19,7 +19,7 @@ export class SauceLoginPage {
         await this.page.goto("/", {waitUntil : 'domcontentloaded'})
     }
 
-    async login (testcase : SauceLoginModel) {
+    async login (testcase : Pick<SauceLoginModel, 'loginCredentials'>) {
         await this.userName.pressSequentially(testcase.loginCredentials.userName, { delay: 100 });
         await this.password.fill(testcase.loginCredentials.password)
     
